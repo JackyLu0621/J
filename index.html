@@ -29,12 +29,18 @@ html{-webkit-text-size-adjust:100%}
   --nav-rgb:251,249,244; --nav-ink:#2b2b2b;
   --chip:rgba(43,43,43,.06); --chip-hover:rgba(43,43,43,.13);
   --panel:#fffdf8; --accent-read:#8a5a2b; --on-accent:#fff;
+  --ink-strong:#141414;
+  --c-red:#b3261e; --c-orange:#c2570c; --c-gold:#9a6a00; --c-green:#2e7d32; --c-teal:#0f766e; --c-blue:#1d5fb4; --c-purple:#7b3fa0; --c-pink:#c2185b; --c-gray:#7a7467;
+  --m-gold:rgba(255,205,60,.5); --m-red:rgba(255,120,110,.36); --m-blue:rgba(100,170,255,.4); --m-green:rgba(110,210,130,.4); --m-purple:rgba(190,140,240,.4);
 }
 :root[data-theme="night"]{
   --paper:#050505; --ink:#b5b1a7; --ink-soft:#77736a; --rule:rgba(255,255,255,.10);
   --nav-rgb:12,12,13; --nav-ink:#d6d2c8;
   --chip:rgba(255,255,255,.07); --chip-hover:rgba(255,255,255,.15);
   --panel:#151517; --accent-read:#d4b06a; --on-accent:#1a1408;
+  --ink-strong:#ece8de;
+  --c-red:#ff7b72; --c-orange:#ffa657; --c-gold:#e3b341; --c-green:#7ee787; --c-teal:#56d4c6; --c-blue:#79b8ff; --c-purple:#c9a0f0; --c-pink:#ff8ac1; --c-gray:#8b8678;
+  --m-gold:rgba(227,179,65,.3); --m-red:rgba(255,123,114,.28); --m-blue:rgba(121,184,255,.28); --m-green:rgba(126,231,135,.26); --m-purple:rgba(201,160,240,.28);
 }
 
 body{
@@ -312,6 +318,107 @@ button{font:inherit;color:inherit}
 .prose img{max-width:100%;height:auto}
 .prose ::selection,.chapter-title::selection{background:rgba(138,90,43,.28)}
 
+/* ---- 內文豐富樣式（作者可用的 class 白名單） ---- */
+.prose strong,.prose b{font-weight:700;color:var(--ink-strong)}
+.prose u{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.25em}
+.prose mark{background:linear-gradient(transparent 52%,var(--m-gold) 52%);color:inherit;padding:0 .12em;border-radius:2px}
+.prose mark.m-gold{background:linear-gradient(transparent 52%,var(--m-gold) 52%)}
+.prose mark.m-red{background:linear-gradient(transparent 52%,var(--m-red) 52%)}
+.prose mark.m-blue{background:linear-gradient(transparent 52%,var(--m-blue) 52%)}
+.prose mark.m-green{background:linear-gradient(transparent 52%,var(--m-green) 52%)}
+.prose mark.m-purple{background:linear-gradient(transparent 52%,var(--m-purple) 52%)}
+.prose .c-red{color:var(--c-red)}
+.prose .c-orange{color:var(--c-orange)}
+.prose .c-gold{color:var(--c-gold)}
+.prose .c-green{color:var(--c-green)}
+.prose .c-teal{color:var(--c-teal)}
+.prose .c-blue{color:var(--c-blue)}
+.prose .c-purple{color:var(--c-purple)}
+.prose .c-pink{color:var(--c-pink)}
+.prose .c-gray{color:var(--c-gray)}
+.prose .big{font-size:1.28em;line-height:1.4}
+.prose p.big{font-size:calc(var(--fs)*1.28)}
+.prose .small{font-size:.84em;color:var(--ink-soft)}
+.prose p.small{font-size:calc(var(--fs)*.84)}
+.prose .spaced{letter-spacing:.35em}
+.prose .glow{text-shadow:0 0 .7em currentColor}
+.prose .whisper{font-size:.88em;color:var(--ink-soft);font-style:italic;letter-spacing:.12em}
+.prose p.whisper{font-size:calc(var(--fs)*.88)}
+.prose .center{text-align:center}
+.prose .right{text-align:right}
+.prose .indent{text-indent:2em}
+.prose p.dropcap::first-letter{float:left;font-size:3.5em;line-height:.88;padding:.06em .1em 0 0;font-weight:700;color:var(--accent-read)}
+.prose .mono,.prose code,.prose kbd,.prose pre{font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Noto Sans Mono CJK TC",monospace}
+.prose code,.prose kbd{font-size:.86em;letter-spacing:0;background:var(--chip);border:1px solid var(--rule);border-radius:5px;padding:.08em .4em}
+.prose pre{margin:0 0 1.4em;padding:1em 1.2em;overflow:auto;background:var(--chip);border-radius:10px;font-size:calc(var(--fs) - 3px);line-height:1.6;letter-spacing:0;white-space:pre-wrap}
+.prose sup,.prose sub{font-size:.7em;line-height:0}
+.prose ruby rt{font-size:.5em;letter-spacing:0;color:var(--ink-soft)}
+.prose a{color:var(--accent-read);text-underline-offset:.22em}
+
+.prose h2{margin:2.4em 0 1em;padding-left:.8em;border-left:4px solid var(--accent-read);font-size:calc(var(--fs) + 5px);line-height:1.4;letter-spacing:.08em;font-weight:700;color:var(--ink-strong)}
+.prose h3{margin:2em 0 .7em;font-size:calc(var(--fs) + 1px);letter-spacing:.14em;font-weight:700;color:var(--accent-read)}
+.prose h4{margin:1.6em 0 .5em;font-size:calc(var(--fs) - 3px);letter-spacing:.3em;font-weight:600;color:var(--ink-soft)}
+.prose hr.line{height:0;border-top:1px solid var(--rule);margin:2.4em 0}
+.prose hr.line::before{content:none}
+.prose hr.star::before{content:"✦"}
+
+.prose blockquote.pull{margin:2.4em 0;padding:1.2em 1em;border:0;text-align:center;font-size:calc(var(--fs)*1.22);line-height:1.7;letter-spacing:.1em;color:var(--accent-read);font-weight:600}
+.prose blockquote.pull::before{content:"❝";display:block;font-size:2em;line-height:.8;opacity:.5;margin-bottom:.2em}
+.prose blockquote.pull p{font-size:inherit;margin:0}
+
+.prose .box{--bc:var(--c-blue);margin:1.9em 0;padding:1em 1.3em;border-radius:12px;border:1px solid var(--rule);border-left:5px solid var(--bc);background:var(--chip);background:color-mix(in srgb,var(--bc) 9%,transparent)}
+.prose .box-info{--bc:var(--c-blue)}
+.prose .box-warn{--bc:var(--c-gold)}
+.prose .box-danger{--bc:var(--c-red)}
+.prose .box-ok{--bc:var(--c-green)}
+.prose .box-secret{--bc:var(--c-purple)}
+.prose .box p,.prose .doc p{font-size:calc(var(--fs) - 1px);margin:0 0 .8em;text-align:left}
+.prose .box p:last-child,.prose .doc p:last-child{margin-bottom:0}
+.prose .doc{margin:2em 0;padding:1.3em 1.6em;background:var(--panel);border:1px solid var(--rule);border-top:4px double var(--ink-soft);border-radius:4px;box-shadow:0 8px 26px rgba(0,0,0,.12)}
+.prose p.box-title{margin:0 0 .7em;font-size:calc(var(--fs) - 4px);font-weight:700;letter-spacing:.3em;color:var(--bc,var(--accent-read));text-align:left}
+.prose .terminal{--c-red:#ff7b72;--c-orange:#ffa657;--c-gold:#e3b341;--c-green:#7ee787;--c-teal:#56d4c6;--c-blue:#79b8ff;--c-purple:#c9a0f0;--c-pink:#ff8ac1;--c-gray:#8b8678;--ink-strong:#c8ffd9;--bc:#5fd38a;margin:2em 0;padding:1em 1.3em 1.1em;border-radius:12px;background:#0a0f0c;border:1px solid #1d2b22;box-shadow:0 0 0 1px rgba(95,211,138,.08),0 12px 36px rgba(0,0,0,.35);color:#7ee7a0}
+.prose .terminal::before{content:"● ● ●";display:block;margin-bottom:.8em;font-size:12px;letter-spacing:.35em;color:#2f4a38}
+.prose .terminal p{margin:0 0 .5em;font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Noto Sans Mono CJK TC",monospace;font-size:calc(var(--fs) - 3px);line-height:1.7;letter-spacing:0;text-align:left;color:inherit}
+.prose .terminal p:last-child{margin-bottom:0}
+
+.prose .redact{background:var(--ink);color:transparent;border-radius:3px;padding:0 .2em;cursor:pointer;transition:background .35s ease,color .35s ease;-webkit-user-select:none;user-select:none}
+.prose .redact:hover{background:var(--ink-soft)}
+.prose .redact.show{background:transparent;color:var(--c-red);box-shadow:inset 0 -2px 0 var(--c-red);-webkit-user-select:text;user-select:text}
+.prose .redact:focus-visible{outline:2px solid var(--accent-read);outline-offset:2px}
+
+.prose figure{margin:2.2em 0;text-align:center}
+.prose figure img,.prose .gallery img{display:block;max-width:100%;height:auto;margin:0 auto;border-radius:10px;box-shadow:0 12px 34px rgba(0,0,0,.22);cursor:zoom-in;transition:transform .4s var(--ease),box-shadow .4s ease}
+.prose figure img:hover{transform:scale(1.015);box-shadow:0 18px 46px rgba(0,0,0,.3)}
+:root[data-theme="night"] .prose img{filter:brightness(.88) contrast(1.02)}
+.prose figcaption{margin-top:.9em;font-size:13px;letter-spacing:.12em;line-height:1.7;color:var(--ink-soft)}
+.prose figure.wide{width:max(100%,min(960px,calc(100vw - 64px)));margin-left:calc((100% - max(100%,min(960px,calc(100vw - 64px))))/2)}
+.prose figure.sm img{max-width:min(340px,100%)}
+.prose figure.polaroid img{border:10px solid #fdfcf8;border-bottom-width:38px;border-radius:3px;transform:rotate(-1.4deg);max-width:min(420px,100%)}
+.prose figure.polaroid img:hover{transform:rotate(0) scale(1.02)}
+.prose .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:2.2em 0}
+.prose .gallery figure{margin:0}
+.prose .img-fallback{display:block;margin:2em 0;padding:1.6em;border:1px dashed var(--rule);border-radius:10px;text-align:center;color:var(--ink-soft);font-size:14px}
+
+.prose ul,.prose ol{margin:0 0 1.4em;padding-left:1.7em;font-size:var(--fs);line-height:1.8;letter-spacing:.5px}
+.prose li{margin:.35em 0;padding-left:.2em}
+.prose li::marker{color:var(--accent-read)}
+.prose .table-wrap{margin:1.8em 0;overflow-x:auto}
+.prose table{width:100%;border-collapse:collapse;font-size:calc(var(--fs) - 2px);line-height:1.6;letter-spacing:0}
+.prose th,.prose td{padding:.6em .9em;text-align:left;border-bottom:1px solid var(--rule)}
+.prose th{font-weight:700;color:var(--accent-read);border-bottom:2px solid var(--accent-read);white-space:nowrap}
+.prose details{margin:1.8em 0;padding:.1em 1.2em;border:1px solid var(--rule);border-radius:12px;background:var(--chip)}
+.prose summary{cursor:pointer;padding:.8em 0;font-weight:700;color:var(--accent-read);letter-spacing:.1em}
+.prose details[open] summary{border-bottom:1px solid var(--rule);margin-bottom:.9em}
+
+.prose .rv{opacity:0;transform:translateY(18px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.prose .rv.rv-in{opacity:1;transform:none}
+
+.lightbox{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;background:rgba(0,0,0,.9);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .25s ease;cursor:zoom-out}
+.lightbox.open{opacity:1}
+.lightbox img{max-width:94vw;max-height:80vh;object-fit:contain;border-radius:8px;box-shadow:0 30px 80px rgba(0,0,0,.6);transform:scale(.96);transition:transform .35s var(--ease)}
+.lightbox.open img{transform:none}
+.lb-cap{margin:0;max-width:80ch;color:#cfc8b8;font-size:14px;letter-spacing:.1em;line-height:1.7;text-align:center}
+
 .pager{display:flex;gap:14px;margin-top:40px;padding-top:28px;border-top:1px solid var(--rule)}
 .pager-btn{
   flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; padding:14px 18px; cursor:pointer;
@@ -425,6 +532,11 @@ button{font:inherit;color:inherit}
   </main>
 </div>
 
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-label="圖片檢視">
+  <img alt="">
+  <p class="lb-cap" id="lbCap" hidden></p>
+</div>
+
 <noscript><p style="padding:24px;color:#ccc">此閱讀器需要啟用 JavaScript。</p></noscript>
 
 <script>
@@ -532,21 +644,115 @@ button{font:inherit;color:inherit}
     return bookCache.get(book.id);
   }
 
+  /* ---- 內文白名單：只允許這些標籤、屬性與 class ---- */
+  const ALLOWED_TAGS = new Set(['p','br','strong','b','em','i','u','s','mark','span','sup','sub','small','ruby','rt','rp','code','kbd','pre','h2','h3','h4','hr','blockquote','div','aside','figure','figcaption','img','ul','ol','li','table','thead','tbody','tr','th','td','details','summary','a']);
+  const DROP_TAGS = new Set(['script','style','iframe','object','embed','link','meta','base','form','input','button','textarea','select','svg','math','canvas','audio','video','template','noscript','title']);
+  const ALLOWED_ATTRS = { img: ['src','alt','title'], a: ['href','title'], td: ['colspan','rowspan'], th: ['colspan','rowspan'], ol: ['start'], details: ['open'] };
+  const ALLOWED_CLASSES = new Set([
+    'c-red','c-orange','c-gold','c-green','c-teal','c-blue','c-purple','c-pink','c-gray',
+    'm-gold','m-red','m-blue','m-green','m-purple',
+    'big','small','spaced','glow','whisper','mono','center','right','indent','dropcap',
+    'box','box-info','box-warn','box-danger','box-ok','box-secret','box-title','doc','terminal',
+    'wide','sm','polaroid','gallery','line','star','pull','redact'
+  ]);
+
+  function isSafeUrl(value, { image = false } = {}) {
+    const s = String(value).replace(/[\u0000- \u007f-\u009f]/g, '');
+    if (!s) return false;
+    const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(s);
+    if (!scheme) return true;                         // 相對路徑，例如 images/a.jpg
+    const p = scheme[1].toLowerCase();
+    if (p === 'http' || p === 'https') return true;
+    return image && p === 'data' && /^data:image\/(png|jpe?g|gif|webp|avif);/i.test(s);
+  }
+
+  function sanitize(parent) {
+    [...parent.childNodes].forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE) return;
+      if (node.nodeType !== Node.ELEMENT_NODE) { node.remove(); return; }
+      const tag = node.tagName.toLowerCase();
+      if (DROP_TAGS.has(tag)) { node.remove(); return; }
+      sanitize(node);                                  // 先清理子節點
+      if (!ALLOWED_TAGS.has(tag)) { node.replaceWith(...node.childNodes); return; } // 未知標籤：保留文字、拿掉外殼
+      const allowed = ALLOWED_ATTRS[tag] || [];
+      [...node.attributes].forEach(attr => {
+        const name = attr.name.toLowerCase();
+        if (name === 'class') {
+          const ok = attr.value.split(/\s+/).filter(c => ALLOWED_CLASSES.has(c));
+          if (ok.length) node.setAttribute('class', ok.join(' ')); else node.removeAttribute('class');
+        } else if (!allowed.includes(name)) {
+          node.removeAttribute(attr.name);
+        }
+      });
+      if (tag === 'img') {
+        if (!isSafeUrl(node.getAttribute('src') || '', { image: true })) { node.remove(); return; }
+        node.setAttribute('loading', 'lazy');
+        node.setAttribute('decoding', 'async');
+        if (!node.hasAttribute('alt')) node.setAttribute('alt', '');
+      }
+      if (tag === 'a') {
+        if (isSafeUrl(node.getAttribute('href') || '')) {
+          node.setAttribute('target', '_blank');
+          node.setAttribute('rel', 'noopener noreferrer');
+        } else node.removeAttribute('href');
+      }
+    });
+  }
+
   /* 把章節內文轉成安全的 DocumentFragment */
   function prepareContent(raw) {
     let html = String(raw);
-    if (!/<p[\s>]/i.test(html)) { // 容錯：純文字就依換行自動包成段落
+    if (!/<(p|div|figure|h[2-4]|ul|ol|blockquote|aside|table|details)[\s>]/i.test(html)) { // 容錯：純文字就依換行自動包成段落
       html = html.split(/\n+/).map(s => s.trim()).filter(Boolean).map(s => `<p>${escapeHtml(s)}</p>`).join('');
     }
     const tpl = document.createElement('template');
     tpl.innerHTML = html;
-    tpl.content.querySelectorAll('script,iframe,object,embed,link,style').forEach(n => n.remove());
-    tpl.content.querySelectorAll('*').forEach(node => {
-      [...node.attributes].forEach(a => {
-        if (/^on/i.test(a.name) || /^\s*javascript:/i.test(a.value)) node.removeAttribute(a.name);
-      });
-    });
+    sanitize(tpl.content);
     return tpl.content;
+  }
+
+  /* ---- 內文加強：揭曉黑條、表格捲動、捲動浮現 ---- */
+  let revealObserver = null;
+  function enhanceContent() {
+    const root = el.prose;
+    root.querySelectorAll('.redact').forEach(n => { n.tabIndex = 0; n.setAttribute('role', 'button'); n.title = '點擊揭曉'; });
+    root.querySelectorAll('table').forEach(t => {
+      const w = document.createElement('div'); w.className = 'table-wrap';
+      t.replaceWith(w); w.appendChild(t);
+    });
+    if (revealObserver) { revealObserver.disconnect(); revealObserver = null; }
+    if (!('IntersectionObserver' in window)) return;
+    const nested = '.gallery, .box, .doc, .terminal, blockquote, details';
+    const targets = [...root.querySelectorAll('figure, .box, .doc, .terminal, blockquote, h2, h3, .gallery, .table-wrap, details')]
+      .filter(n => !n.parentElement.closest(nested));
+    revealObserver = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (en.isIntersecting) { en.target.classList.add('rv-in'); revealObserver.unobserve(en.target); }
+      });
+    }, { rootMargin: '0px 0px -6% 0px' });
+    targets.forEach(n => { n.classList.add('rv'); revealObserver.observe(n); });
+  }
+
+  /* ---- 圖片燈箱 ---- */
+  const lb = { root: $('#lightbox'), img: $('#lightbox img'), cap: $('#lbCap') };
+  function openLightbox(img) {
+    const fig = img.closest('figure');
+    const capEl = fig && fig.querySelector('figcaption');
+    const text = (capEl && capEl.textContent.trim()) || img.alt || '';
+    lb.img.src = img.currentSrc || img.src;
+    lb.img.alt = img.alt;
+    lb.cap.textContent = text; lb.cap.hidden = !text;
+    lb.want = true;
+    lb.root.hidden = false;
+    requestAnimationFrame(() => { if (lb.want) lb.root.classList.add('open'); });
+  }
+  function closeLightbox() {
+    if (lb.root.hidden) return;
+    lb.want = false;
+    lb.root.classList.remove('open');
+    setTimeout(() => {
+      if (!lb.want) { lb.root.hidden = true; lb.img.removeAttribute('src'); }
+    }, 260);
   }
 
   /* ================= 畫面切換（淡入淡出） ================= */
@@ -721,6 +927,7 @@ button{font:inherit;color:inherit}
     el.chapterKicker.textContent = `第 ${index + 1} / ${state.chapters.length} 章`;
     el.chapterTitle.textContent = ch.title;
     el.prose.replaceChildren(prepareContent(ch.html));
+    enhanceContent();
     el.chapterLabel.textContent = ch.title;
 
     el.chapterWrap.classList.remove('is-in');
@@ -808,7 +1015,9 @@ button{font:inherit;color:inherit}
       if (!el.chapterPanel.hidden && !e.target.closest('#chapterDropdown')) closeMenu();
     });
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && !el.chapterPanel.hidden) { closeMenu(); el.chapterToggle.focus(); }
+      if (e.key !== 'Escape') return;
+      if (!lb.root.hidden) { closeLightbox(); return; }
+      if (!el.chapterPanel.hidden) { closeMenu(); el.chapterToggle.focus(); }
     });
 
     el.fsDec.addEventListener('click', () => setFontSize(state.fontSize - 1));
@@ -820,6 +1029,29 @@ button{font:inherit;color:inherit}
 
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', () => { updateHint(); updateProgressBar(); });
+
+    // 內文互動：揭曉黑條、點圖放大、圖片載入失敗時的替代顯示
+    el.prose.addEventListener('click', e => {
+      const redact = e.target.closest('.redact');
+      if (redact) { redact.classList.toggle('show'); return; }
+      const img = e.target.closest('img');
+      if (img && !img.closest('a')) openLightbox(img);
+    });
+    el.prose.addEventListener('keydown', e => {
+      const t = e.target;
+      if ((e.key === 'Enter' || e.key === ' ') && t.classList && t.classList.contains('redact')) {
+        e.preventDefault(); t.classList.toggle('show');
+      }
+    });
+    el.prose.addEventListener('error', e => {
+      const img = e.target;
+      if (!(img instanceof HTMLImageElement)) return;
+      const ph = document.createElement('span');
+      ph.className = 'img-fallback';
+      ph.textContent = '🖼 圖片無法載入' + (img.alt ? '：' + img.alt : '');
+      img.replaceWith(ph);
+    }, true);
+    lb.root.addEventListener('click', closeLightbox);
 
     // 桌面：滑鼠滾輪直接橫向捲動書架
     el.scroller.addEventListener('wheel', e => {
