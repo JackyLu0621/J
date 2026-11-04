@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="parchment">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>線上書架</title>
+<meta name="theme-color" content="#121212">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================
+   基礎變數
+   ===================================================== */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+:root{
+  --ease:cubic-bezier(.22,.8,.24,1);
+  --k:1;                 /* 書背縮放係數（手機會縮小） */
+  --fs:19px;             /* 閱讀字級（由 JS 控制） */
+  --font-serif:"Noto Serif TC","Source Han Serif TC","Noto Serif CJK TC","Songti TC","PMingLiU",serif;
+  --font-sans:system-ui,-apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+}
+@media (max-width:600px){:root{--k:.82}}
+
+/* 閱讀器主題 */
+:root[data-theme="parchment"]{
+  --paper:#fbf9f4; --ink:#2b2b2b; --ink-soft:#7a7467; --rule:rgba(43,43,43,.14);
+  --nav-rgb:251,249,244; --nav-ink:#2b2b2b;
+  --chip:rgba(43,43,43,.06); --chip-hover:rgba(43,43,43,.13);
+  --panel:#fffdf8; --accent-read:#8a5a2b; --on-accent:#fff;
+}
+:root[data-theme="night"]{
+  --paper:#050505; --ink:#b5b1a7; --ink-soft:#77736a; --rule:rgba(255,255,255,.10);
+  --nav-rgb:12,12,13; --nav-ink:#d6d2c8;
+  --chip:rgba(255,255,255,.07); --chip-hover:rgba(255,255,255,.15);
+  --panel:#151517; --accent-read:#d4b06a; --on-accent:#1a1408;
+}
+
+body{
+  margin:0; min-height:100vh; min-height:100dvh;
+  background:#121212; color:#ece7da;
+  font-family:var(--font-sans);
+  -webkit-font-smoothing:antialiased; -webkit-tap-highlight-color:transparent;
+  transition:background-color .45s ease;
+}
+body[data-view="reader"]{background:var(--paper)}
+button{font:inherit;color:inherit}
+[hidden]{display:none!important}
+
+.view{opacity:0;transition:opacity .32s ease}
+.view.active{opacity:1}
+
+/* =====================================================
+   第一層：虛擬書架
+   ===================================================== */
+.shelf-view{
+  position:relative; min-height:100vh; min-height:100dvh;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:48px 0 40px; overflow:hidden;
+  background:radial-gradient(120% 80% at 50% 0%,#1d1c1a 0%,#121212 55%,#090909 100%);
+}
+.ambient{
+  position:absolute; inset:-20%; pointer-events:none;
+  background:
+    radial-gradient(38% 32% at 24% 28%,rgba(217,178,95,.10),transparent 70%),
+    radial-gradient(34% 30% at 78% 72%,rgba(52,168,130,.08),transparent 70%);
+  animation:drift 24s ease-in-out infinite alternate;
+}
+@keyframes drift{
+  from{transform:translate3d(-2%,-1%,0) scale(1)}
+  to{transform:translate3d(3%,2%,0) scale(1.08)}
+}
+.shelf-head{position:relative;text-align:center;padding:0 24px 8px}
+.shelf-title{
+  margin:0; font-family:var(--font-serif); font-weight:700;
+  font-size:clamp(26px,4.2vw,42px); letter-spacing:.32em; padding-left:.32em;
+  background:linear-gradient(180deg,#f6e7b8,#b98f3e);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.shelf-tagline{margin:10px 0 0;color:#8d877a;letter-spacing:.3em;font-size:13px;font-family:var(--font-serif)}
+.shelf-stage{position:relative;margin-top:12px}
+
+.shelf-scroller{
+  overflow-x:auto; overflow-y:hidden;
+  padding:64px 0 44px;
+  background:linear-gradient(180deg,rgba(255,255,255,.012),rgba(0,0,0,.28));
+  box-shadow:inset 0 24px 46px rgba(0,0,0,.55),inset 0 -10px 24px rgba(0,0,0,.35);
+  scrollbar-width:none; -ms-overflow-style:none;
+  -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain;
+}
+.shelf-scroller::-webkit-scrollbar{display:none}
+.shelf-inner{display:flex;flex-direction:column;width:max-content;min-width:100%}
+.shelf-books{display:flex;align-items:flex-end;justify-content:center;gap:6px;padding:0 48px;min-height:120px}
+.shelf-board{
+  height:26px; margin-top:-1px; position:relative;
+  background:
+    repeating-linear-gradient(90deg,rgba(0,0,0,.07) 0 2px,transparent 2px 9px),
+    linear-gradient(180deg,#8d6439 0,#6b4a2b 14%,#4a321c 62%,#2b1c0e 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.26),0 2px 0 #170e06,0 24px 30px -8px rgba(0,0,0,.85);
+}
+.shelf-status{
+  align-self:center; margin:0; max-width:640px; text-align:center;
+  color:#a39c8d; font-size:15px; line-height:1.9; white-space:pre-line;
+}
+.shelf-status.is-error{
+  color:#f0c6c0; background:rgba(160,36,56,.14); border:1px solid rgba(214,88,106,.35);
+  padding:18px 22px; border-radius:14px; text-align:left;
+}
+.shelf-hint{margin:16px 0 0;text-align:center;color:#6f695d;font-size:12px;letter-spacing:.2em}
+
+/* ---- 書背 ---- */
+.spine{
+  --band:rgba(255,226,150,.65); --tshadow:0 1px 0 rgba(0,0,0,.55);
+  position:relative; flex:none; padding:0; border:0; cursor:pointer;
+  width:calc(var(--w)*1px*var(--k)); height:calc(var(--h)*1px*var(--k));
+  border-radius:3px 3px 2px 2px;
+  font-family:var(--font-serif); color:var(--ink);
+  background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.028) 0 1px,transparent 1px 3px),
+    linear-gradient(90deg,var(--c1) 0%,var(--c2) 18%,var(--c3) 42%,var(--c2) 70%,var(--c1) 100%);
+  box-shadow:
+    inset 3px 0 5px rgba(255,255,255,.14),
+    inset -5px 0 9px rgba(0,0,0,.5),
+    0 12px 22px rgba(0,0,0,.6);
+  transform-origin:50% 100%;
+  transition:transform .45s var(--ease),box-shadow .45s var(--ease),filter .45s ease;
+  animation:spineIn .8s var(--ease) backwards;
+}
+@keyframes spineIn{from{opacity:0;transform:translateY(26px)}}
+.spine::before,.spine::after{
+  content:""; position:absolute; left:0; right:0; pointer-events:none;
+  height:calc(8px*var(--k)); border-top:2px solid var(--band); border-bottom:1px solid var(--band);
+}
+.spine::before{top:calc(14px*var(--k))}
+.spine::after{bottom:calc(14px*var(--k))}
+.spine-face{
+  position:absolute; left:0; right:0; top:calc(36px*var(--k)); bottom:calc(48px*var(--k));
+  display:flex; align-items:center; justify-content:center; pointer-events:none;
+}
+.spine-text{
+  writing-mode:vertical-rl; max-height:100%; white-space:nowrap; line-height:1.25;
+  color:var(--ink); text-shadow:var(--tshadow);
+}
+.spine-title{display:block;text-align:center;font-weight:700;letter-spacing:.12em;font-size:calc(var(--tfs)*1px*var(--k))}
+.spine-sub{display:block;text-align:center;margin-block-start:calc(9px*var(--k));opacity:.85;letter-spacing:.2em;font-size:calc(var(--sfs)*1px*var(--k))}
+.spine-orn{
+  position:absolute; left:0; right:0; bottom:calc(27px*var(--k)); text-align:center;
+  font-size:calc(12px*var(--k)); color:var(--band); pointer-events:none;
+}
+.spine--gold{--c1:#6e5320;--c2:#c9a44c;--c3:#f0d98c;--ink:#2a1d05;--glow:rgba(240,200,110,.55);--band:rgba(70,45,5,.55);--tshadow:0 1px 0 rgba(255,255,255,.35)}
+.spine--emerald{--c1:#0a3629;--c2:#15735a;--c3:#33a581;--ink:#f3e7c2;--glow:rgba(52,168,130,.5)}
+.spine--sapphire{--c1:#0e2858;--c2:#2255ad;--c3:#5b8de0;--ink:#f3e7c2;--glow:rgba(91,141,224,.5)}
+.spine--crimson{--c1:#4b0d19;--c2:#9d2336;--c3:#d4586a;--ink:#f7e4bb;--glow:rgba(212,88,106,.5)}
+.spine:active{transform:translateY(-6px) scale(1.02)}
+.spine:focus-visible{outline:2px solid #f0d98c;outline-offset:4px}
+@media (hover:hover){
+  .spine:hover{
+    transform:translateY(-18px) scale(1.05); z-index:3; filter:brightness(1.12);
+    box-shadow:
+      inset 3px 0 5px rgba(255,255,255,.2),inset -5px 0 9px rgba(0,0,0,.45),
+      0 26px 34px rgba(0,0,0,.65),0 0 44px var(--glow);
+  }
+}
+
+/* =====================================================
+   第二層：書封面
+   ===================================================== */
+.cover-view{
+  --accent-rgb:217,178,95;
+  position:relative; min-height:100vh; min-height:100dvh; overflow:hidden;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+  padding:80px 24px 56px;
+  background:
+    radial-gradient(80% 60% at 50% 0%,rgba(var(--accent-rgb),.22),transparent 70%),
+    radial-gradient(60% 50% at 50% 100%,rgba(var(--accent-rgb),.10),transparent 70%),
+    #0c0c0e;
+}
+.cover-view[data-color="gold"]{--accent-rgb:217,178,95}
+.cover-view[data-color="emerald"]{--accent-rgb:52,168,130}
+.cover-view[data-color="sapphire"]{--accent-rgb:91,141,224}
+.cover-view[data-color="crimson"]{--accent-rgb:212,88,106}
+
+.back-link{
+  position:absolute; top:max(20px,env(safe-area-inset-top)); left:20px;
+  padding:9px 16px; border-radius:999px; cursor:pointer; font-size:14px; letter-spacing:.08em;
+  color:#cfc8b8; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+  transition:background .25s ease,transform .25s ease;
+}
+.back-link:hover{background:rgba(255,255,255,.12);transform:translateX(-2px)}
+.cover-inner{position:relative;width:100%;max-width:620px;display:flex;flex-direction:column;align-items:center}
+.cover-title{
+  margin:0; font-family:var(--font-serif); font-weight:700; line-height:1.15;
+  font-size:clamp(44px,10vw,92px); letter-spacing:.12em; padding-left:.12em;
+  background:linear-gradient(180deg,#ffffff 0%,rgb(var(--accent-rgb)) 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 8px 26px rgba(var(--accent-rgb),.35));
+}
+.cover-sub{margin:18px 0 0;font-family:var(--font-serif);font-size:clamp(17px,3vw,24px);letter-spacing:.3em;padding-left:.3em;color:rgb(var(--accent-rgb))}
+.cover-rule{
+  width:min(220px,50%); height:1px; margin:28px 0 22px; border:0;
+  background:linear-gradient(90deg,transparent,rgba(var(--accent-rgb),.8),transparent);
+}
+.cover-author{margin:0;color:#b9b2a2;letter-spacing:.35em;padding-left:.35em;font-size:15px;font-family:var(--font-serif)}
+.cover-card{
+  margin-top:30px; width:100%; padding:24px 26px; border-radius:18px; text-align:left;
+  background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.11);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  box-shadow:0 20px 50px rgba(0,0,0,.4);
+}
+.cover-synopsis{margin:0;color:#cdc7b9;line-height:1.95;font-size:16px;letter-spacing:.04em;white-space:pre-line;font-family:var(--font-serif)}
+.btn-read{
+  margin-top:34px; padding:16px 44px 16px calc(44px + .4em); border-radius:999px; cursor:pointer;
+  font-family:var(--font-serif); font-weight:600; font-size:18px; letter-spacing:.4em; color:#fff8e8;
+  border:1px solid rgba(var(--accent-rgb),.75);
+  background:linear-gradient(180deg,rgba(var(--accent-rgb),.30),rgba(var(--accent-rgb),.12));
+  animation:breathe 3.2s ease-in-out infinite;
+  transition:transform .3s var(--ease);
+}
+.btn-read:hover{transform:scale(1.05)}
+.btn-read:disabled{animation:none;opacity:.7;cursor:wait;transform:none}
+@keyframes breathe{
+  0%,100%{box-shadow:0 0 14px rgba(var(--accent-rgb),.25),0 0 0 0 rgba(var(--accent-rgb),.35)}
+  50%{box-shadow:0 0 34px rgba(var(--accent-rgb),.55),0 0 0 12px rgba(var(--accent-rgb),0)}
+}
+.cover-msg{margin:18px 0 0;min-height:1.5em;color:#f0c6c0;font-size:14px;line-height:1.8;white-space:pre-line}
+.cover-view.active .cover-title{animation:rise .9s var(--ease) both}
+.cover-view.active .cover-sub{animation:rise .9s .12s var(--ease) both}
+.cover-view.active .cover-rule,.cover-view.active .cover-author{animation:rise .9s .22s var(--ease) both}
+.cover-view.active .cover-card{animation:rise .9s .32s var(--ease) both}
+.cover-view.active .btn-read{animation:rise .9s .44s var(--ease) both,breathe 3.2s 1.4s ease-in-out infinite}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+
+/* =====================================================
+   第三層：閱讀器
+   ===================================================== */
+.reader-view{min-height:100vh;min-height:100dvh;background:var(--paper);color:var(--ink);transition:opacity .32s ease,background-color .45s ease,color .45s ease}
+
+.reader-nav{
+  position:sticky; top:0; z-index:50;
+  background:rgba(var(--nav-rgb),.74); color:var(--nav-ink);
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--rule);
+  transition:background-color .45s ease,color .45s ease;
+}
+.nav-inner{display:flex;align-items:center;gap:8px;padding:10px 20px;padding-top:max(10px,env(safe-area-inset-top))}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0}
+.chip-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  height:36px; padding:0 14px; border-radius:999px; cursor:pointer; white-space:nowrap;
+  font-size:14px; color:var(--nav-ink); background:var(--chip); border:1px solid var(--rule);
+  transition:background .2s ease,transform .2s ease,opacity .2s ease;
+}
+.chip-btn:hover:not(:disabled){background:var(--chip-hover)}
+.chip-btn:active:not(:disabled){transform:scale(.96)}
+.chip-btn:disabled{opacity:.35;cursor:not-allowed}
+.chip-btn:focus-visible{outline:2px solid var(--accent-read);outline-offset:2px}
+.btn-home{background:var(--accent-read);color:var(--on-accent);border-color:transparent;font-weight:600}
+.btn-home:hover:not(:disabled){background:var(--accent-read);filter:brightness(1.1)}
+.icon-btn{min-width:36px;padding:0 10px;font-weight:600;font-family:var(--font-sans)}
+.font-ctl{display:flex;align-items:center;gap:6px}
+.fs-value{min-width:2ch;text-align:center;font-size:13px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+
+.dropdown{min-width:0}
+.dd-toggle{max-width:min(260px,38vw);min-width:0}
+.dd-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.dd-caret{font-size:11px;opacity:.7;transition:transform .25s ease}
+.dd-toggle[aria-expanded="true"] .dd-caret{transform:rotate(180deg)}
+.chapter-panel{
+  position:absolute; top:calc(100% + 6px); right:20px;
+  width:min(380px,calc(100vw - 32px));
+  background:var(--panel); color:var(--ink);
+  border:1px solid var(--rule); border-radius:16px; overflow:hidden;
+  box-shadow:0 22px 56px rgba(0,0,0,.35);
+  animation:pop .22s var(--ease);
+  transform-origin:top right;
+}
+@keyframes pop{from{opacity:0;transform:translateY(-6px) scale(.97)}}
+.panel-head{padding:12px 16px;font-size:12px;letter-spacing:.2em;color:var(--ink-soft);border-bottom:1px solid var(--rule)}
+.chapter-list{list-style:none;margin:0;padding:6px;position:relative;max-height:min(60vh,440px);overflow-y:auto;overscroll-behavior:contain}
+.chapter-item{
+  display:flex; align-items:baseline; gap:12px; width:100%; padding:11px 12px; border:0; border-radius:10px;
+  background:none; cursor:pointer; text-align:left; color:var(--ink); font-family:var(--font-serif); font-size:15px; line-height:1.5;
+  transition:background .15s ease;
+}
+.chapter-item:hover{background:var(--chip)}
+.chapter-item .num{flex:none;min-width:2.2ch;text-align:right;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.chapter-item.is-active{background:var(--chip-hover);color:var(--accent-read);font-weight:600}
+
+.progress{position:absolute;left:0;right:0;bottom:-1px;height:2px;pointer-events:none}
+.progress-bar{height:100%;width:100%;background:var(--accent-read);transform:scaleX(0);transform-origin:left}
+
+.reader-main{padding:0 24px}
+.reader-column{max-width:720px;margin:0 auto;padding:64px 0 96px}
+.chapter-kicker{margin:0 0 14px;color:var(--ink-soft);font-size:13px;letter-spacing:.3em}
+.chapter-title{
+  margin:0 0 44px; padding-bottom:26px; border-bottom:1px solid var(--rule);
+  font-family:var(--font-serif); font-weight:700; line-height:1.4; letter-spacing:.06em;
+  font-size:calc(var(--fs) + 10px);
+}
+.chapter.is-in{animation:chapterIn .6s var(--ease) both}
+@keyframes chapterIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+.prose{font-family:var(--font-serif);color:var(--ink)}
+.prose p{
+  margin:0 0 1.4em; font-size:var(--fs); line-height:1.8; letter-spacing:.5px;
+  text-align:justify; text-justify:inter-character; overflow-wrap:break-word;
+}
+.prose hr{border:0;margin:2.4em 0;text-align:center;height:1em;line-height:1}
+.prose hr::before{content:"◆　◆　◆";font-size:.8em;letter-spacing:.2em;color:var(--ink-soft)}
+.prose blockquote{margin:0 0 1.4em;padding:.2em 1.2em;border-left:3px solid var(--rule);color:var(--ink-soft)}
+.prose img{max-width:100%;height:auto}
+.prose ::selection,.chapter-title::selection{background:rgba(138,90,43,.28)}
+
+.pager{display:flex;gap:14px;margin-top:40px;padding-top:28px;border-top:1px solid var(--rule)}
+.pager-btn{
+  flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; padding:14px 18px; cursor:pointer;
+  border-radius:14px; border:1px solid var(--rule); background:var(--chip); color:var(--ink);
+  font-family:var(--font-serif); transition:background .2s ease,transform .2s ease;
+}
+.pager-btn:hover:not(:disabled){background:var(--chip-hover);transform:translateY(-2px)}
+.pager-btn:disabled{opacity:.35;cursor:not-allowed}
+.pager-btn.next{text-align:right}
+.pager-dir{font-size:12px;letter-spacing:.2em;color:var(--ink-soft)}
+.pager-name{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+@media (max-width:600px){
+  .nav-inner{padding-left:12px;padding-right:12px;gap:6px}
+  .nav-right{gap:6px}
+  .chapter-panel{right:12px}
+  .chip-btn{padding:0 11px;font-size:13px}
+  .reader-main{padding:0 20px}
+  .reader-column{padding:40px 0 72px}
+  .cover-card{padding:20px}
+}
+@media (max-width:440px){
+  .fs-value{display:none}
+  .dd-icon{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body data-view="shelf">
+
+<!-- ========== 第一層：書架 ========== -->
+<div id="shelfView" class="view shelf-view active">
+  <div class="ambient" aria-hidden="true"></div>
+  <header class="shelf-head">
+    <h1 class="shelf-title" id="siteTitle">私人圖書館</h1>
+    <p class="shelf-tagline" id="siteTagline"></p>
+  </header>
+  <section class="shelf-stage" aria-label="書架">
+    <div class="shelf-scroller" id="shelfScroller">
+      <div class="shelf-inner">
+        <div class="shelf-books" id="shelfRow">
+          <p class="shelf-status" id="shelfStatus">書架整理中…</p>
+        </div>
+        <div class="shelf-board" aria-hidden="true"></div>
+      </div>
+    </div>
+    <p class="shelf-hint" id="shelfHint" hidden>← 左右滑動，瀏覽更多書籍 →</p>
+  </section>
+</div>
+
+<!-- ========== 第二層：封面 ========== -->
+<section id="coverView" class="view cover-view" data-color="gold" hidden aria-label="書籍封面">
+  <button type="button" class="back-link" id="coverBack">← 回書架</button>
+  <div class="cover-inner">
+    <h2 class="cover-title" id="coverTitle"></h2>
+    <p class="cover-sub" id="coverSub"></p>
+    <hr class="cover-rule">
+    <p class="cover-author" id="coverAuthor"></p>
+    <div class="cover-card" id="coverCard"><p class="cover-synopsis" id="coverSynopsis"></p></div>
+    <button type="button" class="btn-read" id="readBtn">開始閱讀</button>
+    <p class="cover-msg" id="coverMsg" role="status" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ========== 第三層：閱讀器 ========== -->
+<div id="readerView" class="view reader-view" hidden>
+  <header class="reader-nav">
+    <div class="nav-inner">
+      <button type="button" class="chip-btn btn-home" id="homeBtn">🏠 回書架</button>
+      <div class="nav-right">
+        <div class="dropdown" id="chapterDropdown">
+          <button type="button" class="chip-btn dd-toggle" id="chapterToggle" aria-expanded="false" aria-controls="chapterPanel">
+            <span class="dd-icon" aria-hidden="true">☰</span>
+            <span class="dd-label" id="chapterLabel">章節</span>
+            <span class="dd-caret" aria-hidden="true">▾</span>
+          </button>
+          <div class="chapter-panel" id="chapterPanel" hidden>
+            <div class="panel-head" id="panelHead"></div>
+            <ul class="chapter-list" id="chapterList"></ul>
+          </div>
+        </div>
+        <div class="font-ctl" role="group" aria-label="字型大小">
+          <button type="button" class="chip-btn icon-btn" id="fsDec" aria-label="縮小字型">A-</button>
+          <span class="fs-value" id="fsValue" aria-live="polite">19</span>
+          <button type="button" class="chip-btn icon-btn" id="fsInc" aria-label="放大字型">A+</button>
+        </div>
+        <button type="button" class="chip-btn icon-btn" id="themeBtn" aria-label="切換護眼／深夜模式">🌙</button>
+      </div>
+    </div>
+    <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
+  </header>
+
+  <main class="reader-main">
+    <div class="reader-column">
+      <article class="chapter" id="chapterWrap">
+        <p class="chapter-kicker" id="chapterKicker"></p>
+        <h1 class="chapter-title" id="chapterTitle"></h1>
+        <div class="prose" id="prose"></div>
+      </article>
+      <nav class="pager" aria-label="章節切換">
+        <button type="button" class="pager-btn prev" id="prevBtn">
+          <span class="pager-dir">← 上一章</span><span class="pager-name" id="prevName">—</span>
+        </button>
+        <button type="button" class="pager-btn next" id="nextBtn">
+          <span class="pager-dir">下一章 →</span><span class="pager-name" id="nextName">—</span>
+        </button>
+      </nav>
+    </div>
+  </main>
+</div>
+
+<noscript><p style="padding:24px;color:#ccc">此閱讀器需要啟用 JavaScript。</p></noscript>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ================= 常數與工具 ================= */
+  const FS_MIN = 15, FS_MAX = 30, FS_DEFAULT = 19;
+  const SPINE_COLORS = ['gold', 'emerald', 'sapphire', 'crimson'];
+  const KEY = { fs: 'reader.fontSize', theme: 'reader.theme', progress: 'reader.progress' };
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+  const escapeHtml = s => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const hash = str => { let h = 0; for (const ch of String(str)) h = (h * 31 + ch.codePointAt(0)) >>> 0; return h; };
+
+  const store = {
+    get(key, fallback) {
+      try { const v = localStorage.getItem(key); return v === null ? fallback : JSON.parse(v); }
+      catch { return fallback; }
+    },
+    set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* 隱私模式等情況：忽略 */ } }
+  };
+
+  const el = {
+    body: document.body,
+    root: document.documentElement,
+    views: { shelf: $('#shelfView'), cover: $('#coverView'), reader: $('#readerView') },
+    siteTitle: $('#siteTitle'), siteTagline: $('#siteTagline'),
+    scroller: $('#shelfScroller'), shelfRow: $('#shelfRow'), shelfHint: $('#shelfHint'),
+    coverTitle: $('#coverTitle'), coverSub: $('#coverSub'), coverAuthor: $('#coverAuthor'),
+    coverCard: $('#coverCard'), coverSynopsis: $('#coverSynopsis'), coverMsg: $('#coverMsg'),
+    coverBack: $('#coverBack'), readBtn: $('#readBtn'),
+    homeBtn: $('#homeBtn'), dropdown: $('#chapterDropdown'), chapterToggle: $('#chapterToggle'),
+    chapterLabel: $('#chapterLabel'), chapterPanel: $('#chapterPanel'), panelHead: $('#panelHead'), chapterList: $('#chapterList'),
+    fsDec: $('#fsDec'), fsInc: $('#fsInc'), fsValue: $('#fsValue'), themeBtn: $('#themeBtn'),
+    progressBar: $('#progressBar'),
+    chapterWrap: $('#chapterWrap'), chapterKicker: $('#chapterKicker'), chapterTitle: $('#chapterTitle'), prose: $('#prose'),
+    prevBtn: $('#prevBtn'), nextBtn: $('#nextBtn'), prevName: $('#prevName'), nextName: $('#nextName')
+  };
+
+  /* ================= 狀態 ================= */
+  const state = {
+    view: 'shelf',
+    siteTitle: '線上書架',
+    books: [],
+    book: null,
+    chapters: [],       // [{ title, html }]
+    chapterIndex: 0,
+    fontSize: FS_DEFAULT,
+    theme: 'parchment',
+    loadingBook: false
+  };
+  const bookCache = new Map(); // bookId -> Promise<chapters>
+
+  /* ================= 資料讀取 ================= */
+  async function fetchJson(url, label) {
+    let res;
+    try {
+      res = await fetch(url, { cache: 'no-cache' });
+    } catch {
+      throw new Error(location.protocol === 'file:'
+        ? `無法讀取 ${label}：瀏覽器不允許以 file:// 直接開啟網頁並讀取檔案。\n請改用本機伺服器（例如在資料夾內執行  python -m http.server  再開啟 http://localhost:8000），或上傳到網站空間後再開啟。`
+        : `無法讀取 ${label}，請檢查網路連線與檔案路徑（${url}）。`);
+    }
+    if (!res.ok) throw new Error(`${label} 讀取失敗（HTTP ${res.status}，路徑：${url}）`);
+    try { return await res.json(); }
+    catch { throw new Error(`${label} 不是有效的 JSON，請檢查逗號與引號是否正確（路徑：${url}）。`); }
+  }
+
+  async function loadConfig() {
+    const cfg = await fetchJson('config.json', 'config.json');
+    if (!cfg || !Array.isArray(cfg.books)) throw new Error('config.json 格式錯誤：缺少 "books" 陣列。');
+    const seen = new Set();
+    const books = [];
+    cfg.books.forEach(b => {
+      if (!b || typeof b.id !== 'string' || typeof b.title !== 'string' || typeof b.file !== 'string') {
+        console.warn('略過格式不完整的書籍（需要 id、title、file）：', b); return;
+      }
+      if (seen.has(b.id)) { console.warn('略過重複的書籍 id：', b.id); return; }
+      seen.add(b.id);
+      books.push({ ...b, _color: SPINE_COLORS.includes(b.color) ? b.color : SPINE_COLORS[books.length % SPINE_COLORS.length] });
+    });
+    return { site: cfg.site || {}, books };
+  }
+
+  function normalizeChapters(data) {
+    const src = data && typeof data === 'object' && data.chapters ? data.chapters : data;
+    let list = [];
+    if (Array.isArray(src)) {
+      list = src.map((c, i) => ({ title: String(c && c.title != null ? c.title : `第 ${i + 1} 章`), html: String(c && (c.content ?? c.html) != null ? (c.content ?? c.html) : '') }));
+    } else if (src && typeof src === 'object') {
+      list = Object.entries(src).map(([title, html]) => ({ title, html: String(html ?? '') }));
+    }
+    if (!list.length) throw new Error('小說檔案中找不到任何章節（需要 "chapters" 物件，key 為章節名、value 為內文）。');
+    return list;
+  }
+
+  function loadBook(book) {
+    if (!bookCache.has(book.id)) {
+      const p = fetchJson(book.file, `《${book.title}》內容檔`).then(normalizeChapters);
+      p.catch(() => bookCache.delete(book.id)); // 失敗時允許重試
+      bookCache.set(book.id, p);
+    }
+    return bookCache.get(book.id);
+  }
+
+  /* 把章節內文轉成安全的 DocumentFragment */
+  function prepareContent(raw) {
+    let html = String(raw);
+    if (!/<p[\s>]/i.test(html)) { // 容錯：純文字就依換行自動包成段落
+      html = html.split(/\n+/).map(s => s.trim()).filter(Boolean).map(s => `<p>${escapeHtml(s)}</p>`).join('');
+    }
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    tpl.content.querySelectorAll('script,iframe,object,embed,link,style').forEach(n => n.remove());
+    tpl.content.querySelectorAll('*').forEach(node => {
+      [...node.attributes].forEach(a => {
+        if (/^on/i.test(a.name) || /^\s*javascript:/i.test(a.value)) node.removeAttribute(a.name);
+      });
+    });
+    return tpl.content;
+  }
+
+  /* ================= 畫面切換（淡入淡出） ================= */
+  let viewToken = 0;
+  function showView(name) {
+    const next = el.views[name];
+    const all = Object.values(el.views);
+    const cur = all.find(v => v.classList.contains('active'));
+    if (cur === next) return;
+    const token = ++viewToken;
+    state.view = name;
+
+    const reveal = () => {
+      if (token !== viewToken) return;
+      all.forEach(v => { if (v !== next) { v.hidden = true; v.classList.remove('active'); } });
+      el.body.dataset.view = name;
+      next.hidden = false;
+      window.scrollTo(0, 0);
+      requestAnimationFrame(() => requestAnimationFrame(() => { if (token === viewToken) next.classList.add('active'); }));
+      if (name === 'shelf') { document.title = state.siteTitle; updateHint(); }
+    };
+
+    if (cur) { cur.classList.remove('active'); setTimeout(reveal, 320); }
+    else reveal();
+  }
+
+  /* ================= 第一層：書架 ================= */
+  function renderShelf() {
+    el.shelfRow.replaceChildren();
+    if (!state.books.length) { setShelfStatus('書架目前是空的。請在 config.json 的 "books" 中加入書籍。'); return; }
+
+    state.books.forEach((book, i) => {
+      const h = hash(book.id);
+      const w = 68 + (h % 3) * 6;
+      const height = 300 + (h % 4) * 14;
+      const avail = height - 120;
+      const titleLen = [...book.title].length;
+      const subLen = [...(book.subtitle || '')].length;
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `spine spine--${book._color}`;
+      btn.style.setProperty('--w', w);
+      btn.style.setProperty('--h', height);
+      btn.style.setProperty('--tfs', clamp(Math.floor(avail / titleLen / 1.1), 14, 28));
+      btn.style.setProperty('--sfs', clamp(Math.floor(avail / Math.max(1, subLen) / 1.2), 11, 15));
+      btn.style.animationDelay = `${i * 80}ms`;
+      btn.setAttribute('aria-label', `開啟《${book.title}》${[book.volume, book.subtitle].filter(Boolean).join(' ')}`);
+
+      const face = document.createElement('span'); face.className = 'spine-face';
+      const text = document.createElement('span'); text.className = 'spine-text';
+      const t = document.createElement('span'); t.className = 'spine-title'; t.textContent = book.title;
+      text.appendChild(t);
+      if (book.subtitle) {
+        const s = document.createElement('span'); s.className = 'spine-sub'; s.textContent = book.subtitle;
+        text.appendChild(s);
+      }
+      face.appendChild(text);
+      const orn = document.createElement('span'); orn.className = 'spine-orn'; orn.setAttribute('aria-hidden', 'true'); orn.textContent = '✦';
+
+      btn.append(face, orn);
+      btn.addEventListener('click', () => openBook(book));
+      el.shelfRow.appendChild(btn);
+    });
+    updateHint();
+  }
+
+  function setShelfStatus(message, isError = false) {
+    el.shelfRow.replaceChildren();
+    const p = document.createElement('p');
+    p.className = 'shelf-status' + (isError ? ' is-error' : '');
+    p.textContent = message;
+    el.shelfRow.appendChild(p);
+    updateHint();
+  }
+
+  function updateHint() {
+    el.shelfHint.hidden = !(el.scroller.scrollWidth > el.scroller.clientWidth + 4);
+  }
+
+  /* ================= 第二層：封面 ================= */
+  function setCoverMsg(msg) { el.coverMsg.textContent = msg || ''; }
+
+  function getProgress(id) {
+    const v = store.get(KEY.progress, {})[id];
+    return Number.isInteger(v) && v >= 0 ? v : 0;
+  }
+  function saveProgress() {
+    if (!state.book) return;
+    const p = store.get(KEY.progress, {});
+    p[state.book.id] = state.chapterIndex;
+    store.set(KEY.progress, p);
+  }
+  function updateReadLabel() {
+    el.readBtn.textContent = state.book && getProgress(state.book.id) > 0 ? '繼續閱讀' : '開始閱讀';
+  }
+
+  function openBook(book) {
+    state.book = book;
+    el.views.cover.dataset.color = book._color;
+    el.coverTitle.textContent = book.title;
+
+    const sub = [book.volume, book.subtitle].filter(Boolean).join('：');
+    el.coverSub.textContent = sub; el.coverSub.hidden = !sub;
+    el.coverAuthor.textContent = book.author ? `作者　${book.author}` : ''; el.coverAuthor.hidden = !book.author;
+    el.coverSynopsis.textContent = book.synopsis || ''; el.coverCard.hidden = !book.synopsis;
+
+    setCoverMsg('');
+    updateReadLabel();
+    document.title = `${book.title} - ${state.siteTitle}`;
+    showView('cover');
+
+    // 背景預先載入內文，點「開始閱讀」時通常已就緒
+    loadBook(book).catch(err => { if (state.book === book) setCoverMsg(err.message); });
+  }
+
+  async function startReading() {
+    const book = state.book;
+    if (!book || state.loadingBook) return;
+    state.loadingBook = true;
+    el.readBtn.disabled = true;
+    el.readBtn.textContent = '載入中…';
+    setCoverMsg('');
+    try {
+      const chapters = await loadBook(book);
+      if (state.book !== book) return; // 讀取途中使用者已離開
+      state.chapters = chapters;
+      const saved = getProgress(book.id);
+      buildChapterMenu();
+      renderChapter(saved < chapters.length ? saved : 0);
+      showView('reader');
+    } catch (err) {
+      if (state.book === book) setCoverMsg(err.message);
+    } finally {
+      state.loadingBook = false;
+      el.readBtn.disabled = false;
+      updateReadLabel();
+    }
+  }
+
+  /* ================= 第三層：閱讀器 ================= */
+  function buildChapterMenu() {
+    el.chapterList.replaceChildren();
+    el.panelHead.textContent = `目錄　·　共 ${state.chapters.length} 章`;
+    const frag = document.createDocumentFragment();
+    state.chapters.forEach((c, i) => {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'chapter-item'; b.dataset.index = i;
+      const num = document.createElement('span'); num.className = 'num'; num.textContent = i + 1;
+      const title = document.createElement('span'); title.textContent = c.title;
+      b.append(num, title);
+      li.appendChild(b); frag.appendChild(li);
+    });
+    el.chapterList.appendChild(frag);
+    closeMenu();
+  }
+
+  function markActiveChapter() {
+    [...el.chapterList.querySelectorAll('.chapter-item')].forEach(b => {
+      const on = Number(b.dataset.index) === state.chapterIndex;
+      b.classList.toggle('is-active', on);
+      if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+    });
+  }
+
+  function renderChapter(index) {
+    const ch = state.chapters[index];
+    if (!ch) return;
+    state.chapterIndex = index;
+
+    el.chapterKicker.textContent = `第 ${index + 1} / ${state.chapters.length} 章`;
+    el.chapterTitle.textContent = ch.title;
+    el.prose.replaceChildren(prepareContent(ch.html));
+    el.chapterLabel.textContent = ch.title;
+
+    el.chapterWrap.classList.remove('is-in');
+    void el.chapterWrap.offsetWidth; // 重新觸發動畫
+    el.chapterWrap.classList.add('is-in');
+
+    const prev = state.chapters[index - 1], next = state.chapters[index + 1];
+    el.prevBtn.disabled = !prev; el.prevName.textContent = prev ? prev.title : '—';
+    el.nextBtn.disabled = !next; el.nextName.textContent = next ? next.title : '—';
+
+    markActiveChapter();
+    document.title = `${ch.title} - ${state.book.title}`;
+    window.scrollTo(0, 0);
+    updateProgressBar();
+    saveProgress();
+  }
+
+  function goChapter(index) {
+    if (index < 0 || index >= state.chapters.length) return;
+    renderChapter(index);
+  }
+
+  /* ---- 章節下拉選單 ---- */
+  function openMenu() {
+    el.chapterPanel.hidden = false;
+    el.chapterToggle.setAttribute('aria-expanded', 'true');
+    const active = el.chapterList.querySelector('.is-active');
+    if (active) el.chapterList.scrollTop = active.offsetTop - el.chapterList.clientHeight / 2 + active.offsetHeight / 2;
+  }
+  function closeMenu() {
+    el.chapterPanel.hidden = true;
+    el.chapterToggle.setAttribute('aria-expanded', 'false');
+  }
+  function toggleMenu() { el.chapterPanel.hidden ? openMenu() : closeMenu(); }
+
+  /* ---- 字型大小 ---- */
+  function setFontSize(n, persist = true) {
+    state.fontSize = clamp(Math.round(Number(n) || FS_DEFAULT), FS_MIN, FS_MAX);
+    el.root.style.setProperty('--fs', state.fontSize + 'px');
+    el.fsValue.textContent = state.fontSize;
+    el.fsDec.disabled = state.fontSize <= FS_MIN;
+    el.fsInc.disabled = state.fontSize >= FS_MAX;
+    if (persist) store.set(KEY.fs, state.fontSize);
+    updateProgressBar();
+  }
+
+  /* ---- 主題 ---- */
+  function setTheme(theme, persist = true) {
+    state.theme = theme === 'night' ? 'night' : 'parchment';
+    el.root.dataset.theme = state.theme;
+    const night = state.theme === 'night';
+    el.themeBtn.textContent = night ? '☀️' : '🌙';
+    el.themeBtn.setAttribute('aria-label', night ? '切換為羊皮紙護眼模式' : '切換為深夜模式');
+    if (persist) store.set(KEY.theme, state.theme);
+  }
+
+  /* ---- 閱讀進度條 ---- */
+  let ticking = false;
+  function updateProgressBar() {
+    if (state.view !== 'reader') return;
+    const h = el.root;
+    const max = h.scrollHeight - h.clientHeight;
+    el.progressBar.style.transform = `scaleX(${max > 0 ? clamp(h.scrollTop / max, 0, 1) : 0})`;
+  }
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { ticking = false; updateProgressBar(); });
+  }
+
+  /* ================= 事件綁定 ================= */
+  function bindEvents() {
+    el.coverBack.addEventListener('click', () => showView('shelf'));
+    el.readBtn.addEventListener('click', startReading);
+    el.homeBtn.addEventListener('click', () => { closeMenu(); showView('shelf'); });
+
+    el.chapterToggle.addEventListener('click', toggleMenu);
+    el.chapterList.addEventListener('click', e => {
+      const item = e.target.closest('.chapter-item');
+      if (!item) return;
+      closeMenu();
+      goChapter(Number(item.dataset.index));
+    });
+    document.addEventListener('pointerdown', e => {
+      if (!el.chapterPanel.hidden && !e.target.closest('#chapterDropdown')) closeMenu();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !el.chapterPanel.hidden) { closeMenu(); el.chapterToggle.focus(); }
+    });
+
+    el.fsDec.addEventListener('click', () => setFontSize(state.fontSize - 1));
+    el.fsInc.addEventListener('click', () => setFontSize(state.fontSize + 1));
+    el.themeBtn.addEventListener('click', () => setTheme(state.theme === 'night' ? 'parchment' : 'night'));
+
+    el.prevBtn.addEventListener('click', () => goChapter(state.chapterIndex - 1));
+    el.nextBtn.addEventListener('click', () => goChapter(state.chapterIndex + 1));
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', () => { updateHint(); updateProgressBar(); });
+
+    // 桌面：滑鼠滾輪直接橫向捲動書架
+    el.scroller.addEventListener('wheel', e => {
+      if (el.scroller.scrollWidth <= el.scroller.clientWidth) return;
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      e.preventDefault();
+      el.scroller.scrollLeft += e.deltaY;
+    }, { passive: false });
+  }
+
+  /* ================= 啟動 ================= */
+  async function init() {
+    setFontSize(store.get(KEY.fs, FS_DEFAULT), false);
+    setTheme(store.get(KEY.theme, 'parchment'), false);
+    bindEvents();
+
+    try {
+      const { site, books } = await loadConfig();
+      state.siteTitle = site.title || '線上書架';
+      state.books = books;
+      el.siteTitle.textContent = state.siteTitle;
+      el.siteTagline.textContent = site.tagline || '';
+      document.title = state.siteTitle;
+      renderShelf();
+    } catch (err) {
+      setShelfStatus(err.message, true);
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
