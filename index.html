@@ -444,6 +444,141 @@ button{font:inherit;color:inherit}
   .fs-value{display:none}
   .dd-icon{display:none}
 }
+/* =====================================================
+   系列：書架銘牌、系列頁、主題封面
+   ===================================================== */
+.shelf-books{gap:34px}
+.shelf-group{display:flex;flex-direction:column;align-items:center}
+.shelf-group-books{display:flex;align-items:flex-end;gap:6px}
+.series-plate{
+  margin:0 0 20px; padding:9px 20px; max-width:100%; border:0; border-radius:6px; cursor:pointer; white-space:nowrap;
+  font-family:var(--font-serif); font-weight:700; font-size:calc(12px*var(--k) + 2px); letter-spacing:.2em;
+  color:#2a1d05; background:linear-gradient(180deg,#f3df9a,#c9a44c 55%,#93702a);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 0 rgba(0,0,0,.25),0 8px 18px rgba(0,0,0,.55);
+  transition:transform .35s var(--ease),box-shadow .35s var(--ease),filter .35s ease;
+}
+.series-plate:focus-visible{outline:2px solid #f0d98c;outline-offset:3px}
+@media (hover:hover){
+  .series-plate:hover{transform:translateY(-3px);filter:brightness(1.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 0 rgba(0,0,0,.25),0 14px 26px rgba(0,0,0,.6),0 0 30px rgba(240,200,110,.4)}
+}
+.spine-orn{font-family:var(--font-serif);font-weight:700}
+
+.cover-art{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cover-art svg{
+  position:absolute; top:0; left:50%; height:100%; width:auto; aspect-ratio:2/3; transform:translateX(-50%); opacity:.7;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 24%,#000 76%,transparent); mask-image:linear-gradient(90deg,transparent,#000 24%,#000 76%,transparent);
+  animation:artBreath 26s ease-in-out infinite alternate;
+}
+.cover-art::after{
+  content:""; position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 38%,transparent 0,rgba(12,12,14,.35) 62%,rgba(12,12,14,.85) 100%),linear-gradient(180deg,rgba(12,12,14,.1),rgba(12,12,14,.6));
+}
+@keyframes artBreath{from{transform:translateX(-50%) scale(1)}to{transform:translateX(-50%) scale(1.06)}}
+.cover-en{margin:14px 0 0;font-family:var(--font-serif);font-size:clamp(12px,2vw,16px);letter-spacing:.3em;padding-left:.3em;color:#b9b2a2}
+.cover-sub{margin-top:14px}
+.cover-synopsis p{margin:0 0 .9em}
+.cover-synopsis p:last-child{margin-bottom:0}
+.cover-view.active .cover-en{animation:rise .9s .06s var(--ease) both}
+.btn-read.is-soon{animation:none;opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+.series-link{
+  margin-top:18px; padding:8px 18px; border-radius:999px; cursor:pointer; font-family:var(--font-serif); font-size:13px; letter-spacing:.2em;
+  color:rgb(var(--accent-rgb)); background:transparent; border:1px solid rgba(var(--accent-rgb),.3);
+  transition:background .25s ease,border-color .25s ease;
+}
+.series-link:hover{background:rgba(var(--accent-rgb),.1);border-color:rgba(var(--accent-rgb),.6)}
+
+.series-view{
+  position:relative; min-height:100vh; min-height:100dvh; overflow:hidden; padding:88px 24px 80px;
+  background:
+    radial-gradient(90% 50% at 50% 0%,rgba(217,178,95,.17),transparent 70%),
+    radial-gradient(50% 36% at 90% 85%,rgba(91,141,224,.09),transparent 70%),
+    radial-gradient(46% 34% at 8% 60%,rgba(52,168,130,.07),transparent 70%),
+    #0a0a0c;
+}
+.series-stars{
+  position:absolute; inset:0; pointer-events:none; opacity:.75;
+  background-image:
+    radial-gradient(1px 1px at 22px 34px,#f4ecd0,transparent),radial-gradient(1px 1px at 96px 150px,#fff,transparent),
+    radial-gradient(1.4px 1.4px at 210px 62px,#f4ecd0,transparent),radial-gradient(1px 1px at 280px 210px,#fff,transparent),
+    radial-gradient(1px 1px at 150px 262px,#f4ecd0,transparent),radial-gradient(1.2px 1.2px at 336px 118px,#fff,transparent),
+    radial-gradient(1px 1px at 60px 300px,#f4ecd0,transparent),radial-gradient(1px 1px at 250px 330px,#fff,transparent);
+  background-size:380px 360px;
+}
+.series-inner{position:relative;max-width:1080px;margin:0 auto}
+.series-head{text-align:center}
+.series-eyebrow{margin:0 0 18px;font-size:12px;letter-spacing:.6em;padding-left:.6em;color:#8d877a}
+.series-title{
+  margin:0; font-family:var(--font-serif); font-weight:700; line-height:1.15;
+  font-size:clamp(40px,9vw,88px); letter-spacing:.1em; padding-left:.1em;
+  background:linear-gradient(180deg,#fff6d8 0%,#d9b25f 55%,#a47a2a 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 8px 28px rgba(217,178,95,.3));
+}
+.series-en{margin:16px 0 0;font-family:var(--font-serif);font-size:clamp(13px,2.2vw,18px);letter-spacing:.34em;padding-left:.34em;color:#b9b2a2}
+.series-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:760px;margin:28px auto 0}
+.series-tags .tag{padding:5px 14px;border:1px solid rgba(217,178,95,.34);border-radius:999px;font-size:12.5px;letter-spacing:.14em;color:#dcc98f;background:rgba(217,178,95,.06)}
+.series-desc{
+  max-width:720px; margin:40px auto 0; padding:26px 30px; border-radius:18px;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  font-family:var(--font-serif); color:#cdc7b9; line-height:2; font-size:16px; letter-spacing:.04em;
+}
+.series-desc p{margin:0 0 1em}
+.series-desc p:last-child{margin-bottom:0}
+.series-desc p:first-child{font-size:1.08em;color:#e8e1cd}
+.series-quote{
+  max-width:700px; margin:44px auto 0; padding:0 8px; border:0; text-align:center;
+  font-family:var(--font-serif); font-weight:600; font-size:clamp(19px,3.2vw,26px); line-height:1.8; letter-spacing:.1em; color:#e3c77b;
+}
+.series-quote::before{content:"❝";display:block;font-size:2.2em;line-height:.7;opacity:.4;margin-bottom:.25em}
+.series-divider{display:flex;align-items:center;gap:18px;margin:64px auto 40px;max-width:520px;color:#8d877a;font-size:13px;letter-spacing:.5em}
+.series-divider::before,.series-divider::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(217,178,95,.45))}
+.series-divider::after{background:linear-gradient(270deg,transparent,rgba(217,178,95,.45))}
+.series-divider span{padding-left:.5em}
+.series-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:34px;justify-items:center}
+
+.book-card{
+  --ac:217,178,95; display:flex; flex-direction:column; gap:16px; width:100%; max-width:340px; padding:0; border:0; background:none;
+  cursor:pointer; text-align:left; color:inherit; font-family:var(--font-serif);
+}
+.book-card[data-color="emerald"]{--ac:52,168,130}
+.book-card[data-color="sapphire"]{--ac:91,141,224}
+.book-card[data-color="crimson"]{--ac:212,88,106}
+.poster{
+  position:relative; width:100%; aspect-ratio:2/3; border-radius:10px; overflow:hidden;
+  background:radial-gradient(90% 70% at 50% 0%,rgba(var(--ac),.5),#0d0d10);
+  box-shadow:0 22px 44px rgba(0,0,0,.6),0 0 0 1px rgba(var(--ac),.28),inset 0 0 0 1px rgba(255,255,255,.06);
+  transition:transform .5s var(--ease),box-shadow .5s var(--ease);
+}
+.poster svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.poster::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.34) 0,transparent 24%,transparent 50%,rgba(0,0,0,.82) 100%)}
+.poster-vol{
+  position:absolute; z-index:1; top:16px; left:16px; padding:4px 12px; border-radius:999px; font-size:12px; letter-spacing:.3em;
+  color:rgb(var(--ac)); background:rgba(0,0,0,.45); border:1px solid rgba(var(--ac),.5);
+  -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+}
+.poster-text{position:absolute;z-index:1;left:20px;right:20px;bottom:22px}
+.poster-title{margin:0;font-size:24px;font-weight:700;line-height:1.3;letter-spacing:.08em;color:#fbf3da;text-shadow:0 2px 14px rgba(0,0,0,.7)}
+.poster-sub{margin:8px 0 0;font-size:14px;letter-spacing:.3em;color:rgb(var(--ac))}
+.card-meta{padding:0 4px}
+.card-en{margin:0 0 8px;font-size:13px;letter-spacing:.12em;line-height:1.6;color:#a8a191}
+.card-status{margin:0;font-size:13px;letter-spacing:.14em;color:rgb(var(--ac))}
+.card-status.soon{color:#8d877a}
+.book-card:focus-visible{outline:none}
+.book-card:focus-visible .poster{box-shadow:0 0 0 3px rgba(var(--ac),.9),0 22px 44px rgba(0,0,0,.6)}
+.book-card:active .poster{transform:scale(.985)}
+@media (hover:hover){
+  .book-card:hover .poster{transform:translateY(-8px);box-shadow:0 34px 60px rgba(0,0,0,.65),0 0 48px rgba(var(--ac),.4),0 0 0 1px rgba(var(--ac),.55)}
+}
+.series-view.active .series-head{animation:rise .9s var(--ease) both}
+.series-view.active .series-desc{animation:rise .9s .15s var(--ease) both}
+.series-view.active .series-quote{animation:rise .9s .25s var(--ease) both}
+.series-view.active .book-card{animation:rise .9s var(--ease) both}
+@media (max-width:600px){
+  .series-view{padding:80px 18px 60px}
+  .series-desc{padding:20px}
+  .series-grid{gap:44px}
+}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
@@ -473,15 +608,36 @@ button{font:inherit;color:inherit}
 
 <!-- ========== 第二層：封面 ========== -->
 <section id="coverView" class="view cover-view" data-color="gold" hidden aria-label="書籍封面">
+  <div class="cover-art" id="coverArt" aria-hidden="true"></div>
   <button type="button" class="back-link" id="coverBack">← 回書架</button>
   <div class="cover-inner">
     <h2 class="cover-title" id="coverTitle"></h2>
+    <p class="cover-en" id="coverEn"></p>
     <p class="cover-sub" id="coverSub"></p>
     <hr class="cover-rule">
     <p class="cover-author" id="coverAuthor"></p>
-    <div class="cover-card" id="coverCard"><p class="cover-synopsis" id="coverSynopsis"></p></div>
+    <div class="cover-card" id="coverCard"><div class="cover-synopsis" id="coverSynopsis"></div></div>
     <button type="button" class="btn-read" id="readBtn">開始閱讀</button>
+    <button type="button" class="series-link" id="coverSeries" hidden></button>
     <p class="cover-msg" id="coverMsg" role="status" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- ========== 系列頁 ========== -->
+<section id="seriesView" class="view series-view" hidden aria-label="系列介紹">
+  <div class="series-stars" id="seriesStars" aria-hidden="true"></div>
+  <button type="button" class="back-link" id="seriesBack">← 回書架</button>
+  <div class="series-inner">
+    <header class="series-head">
+      <p class="series-eyebrow">SERIES</p>
+      <h2 class="series-title" id="seriesTitle"></h2>
+      <p class="series-en" id="seriesEn"></p>
+      <div class="series-tags" id="seriesTags"></div>
+    </header>
+    <div class="series-desc" id="seriesDesc"></div>
+    <blockquote class="series-quote" id="seriesQuote" hidden></blockquote>
+    <div class="series-divider"><span>收錄作品</span></div>
+    <div class="series-grid" id="seriesGrid"></div>
   </div>
 </section>
 
@@ -564,7 +720,10 @@ button{font:inherit;color:inherit}
   const el = {
     body: document.body,
     root: document.documentElement,
-    views: { shelf: $('#shelfView'), cover: $('#coverView'), reader: $('#readerView') },
+    views: { shelf: $('#shelfView'), series: $('#seriesView'), cover: $('#coverView'), reader: $('#readerView') },
+    coverArt: $('#coverArt'), coverEn: $('#coverEn'), coverSeries: $('#coverSeries'),
+    seriesBack: $('#seriesBack'), seriesStars: $('#seriesStars'), seriesTitle: $('#seriesTitle'), seriesEn: $('#seriesEn'),
+    seriesTags: $('#seriesTags'), seriesDesc: $('#seriesDesc'), seriesQuote: $('#seriesQuote'), seriesGrid: $('#seriesGrid'),
     siteTitle: $('#siteTitle'), siteTagline: $('#siteTagline'),
     scroller: $('#shelfScroller'), shelfRow: $('#shelfRow'), shelfHint: $('#shelfHint'),
     coverTitle: $('#coverTitle'), coverSub: $('#coverSub'), coverAuthor: $('#coverAuthor'),
@@ -583,6 +742,9 @@ button{font:inherit;color:inherit}
     view: 'shelf',
     siteTitle: '線上書架',
     books: [],
+    items: [],          // 書架項目：{ series } 或 { books:[…] }
+    series: null,       // 目前開啟的系列
+    coverFrom: 'shelf', // 封面的返回位置
     book: null,
     chapters: [],       // [{ title, html }]
     chapterIndex: 0,
@@ -591,6 +753,169 @@ button{font:inherit;color:inherit}
     loadingBook: false
   };
   const bookCache = new Map(); // bookId -> Promise<chapters>
+
+  /* ================= 主題封面插畫（程式繪製的向量圖） =================
+     config.json 的書籍可指定 "theme": "egypt" | "siam" | "aurora"。
+     想新增主題：在 ART 加一個產生 SVG 字串的函式，並在 THEME_COLOR 指定預設書背色即可。 */
+  const THEME_COLOR = { egypt: 'gold', siam: 'emerald', aurora: 'sapphire' };
+  let artSeq = 0;
+  const nextUid = () => `art${++artSeq}-`;            // 每張圖用獨立 id，避免多張 SVG 的 gradient id 互相衝突
+  const SVG_OPEN = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">';
+
+  function rng(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function starField(seed, n, w, maxY, color = '#fff') {
+    const r = rng(seed); let s = '';
+    for (let i = 0; i < n; i++) {
+      s += `<circle cx="${(r() * w).toFixed(1)}" cy="${(r() * maxY).toFixed(1)}" r="${(.4 + r() * 1.1).toFixed(2)}" fill="${color}" opacity="${(.25 + r() * .65).toFixed(2)}"/>`;
+    }
+    return s;
+  }
+  function glyphRow(seed, y, x0, x1, color) {
+    const r = rng(seed); let s = '';
+    for (let x = x0; x <= x1; x += 26) {
+      const k = Math.floor(r() * 5);
+      s += [
+        `<circle cx="${x}" cy="${y}" r="6" fill="none" stroke="${color}" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="1.8" fill="${color}"/>`,
+        `<path d="M${x - 6} ${y + 8}L${x} ${y - 9}L${x + 6} ${y + 8}Z" fill="none" stroke="${color}" stroke-width="1.5"/>`,
+        `<path d="M${x} ${y - 9}V${y + 9}M${x - 6} ${y - 3}H${x + 6}" stroke="${color}" stroke-width="1.7" fill="none"/>`,
+        `<path d="M${x - 7} ${y}Q${x} ${y - 10} ${x + 7} ${y}Q${x} ${y + 10} ${x - 7} ${y}Z" fill="none" stroke="${color}" stroke-width="1.4"/><circle cx="${x}" cy="${y}" r="2" fill="${color}"/>`,
+        `<path d="M${x - 6} ${y - 8}V${y + 8}M${x + 6} ${y - 8}V${y + 8}M${x - 6} ${y}H${x + 6}" stroke="${color}" stroke-width="1.5" fill="none"/>`
+      ][k];
+    }
+    return s;
+  }
+
+  const ART = {
+    /* 埃及：夜空、落日、金字塔、尼羅河、抽象符號列 */
+    egypt: p => {
+      let ripples = '', glow = '';
+      for (let i = 0; i < 11; i++) {
+        const y = 436 + i * 14;
+        ripples += `<path d="M0 ${y}q25 -4 50 0${' t50 0'.repeat(7)}" fill="none" stroke="#e9b45d" stroke-opacity="${(.2 - i * .012).toFixed(3)}" stroke-width="1.2"/>`;
+      }
+      for (let i = 0; i < 9; i++) {
+        const w = 100 - i * 10;
+        glow += `<rect x="${200 - w / 2}" y="${432 + i * 13}" width="${w}" height="2.4" rx="1.2" fill="#ffd98a" opacity="${(.72 - i * .07).toFixed(2)}"/>`;
+      }
+      return `${SVG_OPEN}<defs>
+<linearGradient id="${p}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a0703"/><stop offset=".5" stop-color="#34200f"/><stop offset=".74" stop-color="#b3722a"/><stop offset="1" stop-color="#f2c26b"/></linearGradient>
+<radialGradient id="${p}g" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffe9a8" stop-opacity=".95"/><stop offset=".38" stop-color="#ffc45a" stop-opacity=".42"/><stop offset="1" stop-color="#ffb03a" stop-opacity="0"/></radialGradient>
+<linearGradient id="${p}n" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9a24e"/><stop offset=".3" stop-color="#6b4217"/><stop offset="1" stop-color="#150b04"/></linearGradient>
+</defs>
+<rect width="400" height="600" fill="url(#${p}s)"/>
+${starField(5, 70, 400, 250, '#ffe9bd')}
+<g opacity=".5">${glyphRow(3, 84, 24, 380, '#e3b95f')}</g>
+<line x1="20" y1="106" x2="380" y2="106" stroke="#e3b95f" stroke-opacity=".3"/>
+<text x="200" y="262" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="190" font-weight="700" fill="#f0c96e" opacity=".17">J</text>
+<circle cx="200" cy="388" r="170" fill="url(#${p}g)"/>
+<circle cx="200" cy="388" r="50" fill="#ffe3a0"/>
+<polygon points="30,420 128,308 226,420" fill="#2a180a"/><polygon points="128,308 226,420 128,420" fill="#150b05"/>
+<polygon points="170,420 232,352 294,420" fill="#24140a"/><polygon points="232,352 294,420 232,420" fill="#120a04"/>
+<polygon points="190,420 292,236 394,420" fill="#34200f"/><polygon points="292,236 394,420 292,420" fill="#150b05"/>
+<polygon points="292,236 306,261 292,261" fill="#f2c26b" opacity=".35"/>
+<rect x="0" y="420" width="400" height="180" fill="url(#${p}n)"/>
+<line x1="0" y1="420" x2="400" y2="420" stroke="#ffd98a" stroke-opacity=".5"/>
+${glow}${ripples}
+<path d="M0 566Q100 540 200 560T400 548V600H0Z" fill="#0d0703"/></svg>`;
+    },
+
+    /* 暹羅：玉色夜空、月、金色光暈中的佛塔、叢林剪影與薄霧 */
+    siam: p => {
+      let fire = '';
+      const r = rng(21);
+      for (let i = 0; i < 26; i++) {
+        fire += `<circle cx="${(r() * 400).toFixed(1)}" cy="${(300 + r() * 250).toFixed(1)}" r="${(.8 + r() * 1.6).toFixed(2)}" fill="#ffd98a" opacity="${(.3 + r() * .6).toFixed(2)}" filter="url(#${p}f)"/>`;
+      }
+      let trees = '';
+      for (let i = 0; i < 16; i++) {
+        const x = i * 27 - 10, h = 70 + ((i * 37) % 50);
+        trees += `<ellipse cx="${x}" cy="${548 - h / 3}" rx="${24 + (i % 3) * 6}" ry="${h / 2}" fill="#041510"/>`;
+      }
+      return `${SVG_OPEN}<defs>
+<linearGradient id="${p}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#030d0b"/><stop offset=".5" stop-color="#0d3329"/><stop offset=".85" stop-color="#1d6a55"/><stop offset="1" stop-color="#2d8a6c"/></linearGradient>
+<radialGradient id="${p}h" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffd98a" stop-opacity=".7"/><stop offset=".45" stop-color="#e2a53f" stop-opacity=".22"/><stop offset="1" stop-color="#e2a53f" stop-opacity="0"/></radialGradient>
+<radialGradient id="${p}m" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6d6" stop-opacity=".55"/><stop offset="1" stop-color="#fff6d6" stop-opacity="0"/></radialGradient>
+<filter id="${p}f" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="1.6"/></filter>
+<filter id="${p}b" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="14"/></filter>
+<g id="${p}t" fill="#05120e" stroke="#d9a84b" stroke-opacity=".45" stroke-width="1.2">
+<polygon points="-92,0 92,0 72,-50 -72,-50"/><polygon points="-72,-50 72,-50 52,-96 -52,-96"/>
+<polygon points="-52,-96 52,-96 34,-136 -34,-136"/><polygon points="-34,-136 34,-136 20,-172 -20,-172"/>
+<polygon points="-20,-172 20,-172 9,-204 -9,-204"/><polygon points="-9,-204 9,-204 0,-300"/>
+<path d="M0 -300V-326" fill="none" stroke-width="2"/><circle cx="0" cy="-330" r="3.5"/>
+<path d="M-15 0V-24Q0 -42 15 -24V0Z" fill="#ffcf6e" stroke="none" opacity=".9"/>
+</g>
+</defs>
+<rect width="400" height="600" fill="url(#${p}s)"/>
+${starField(9, 46, 400, 220, '#dff7ec')}
+<circle cx="316" cy="104" r="64" fill="url(#${p}m)"/><circle cx="316" cy="104" r="26" fill="#fff3cf"/>
+<text x="84" y="190" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="120" font-weight="700" fill="#e2b85a" opacity=".16">J</text>
+<circle cx="200" cy="340" r="220" fill="url(#${p}h)"/>
+<use href="#${p}t" transform="translate(58 520) scale(.52)"/>
+<use href="#${p}t" transform="translate(346 520) scale(.6)"/>
+<use href="#${p}t" transform="translate(200 524)"/>
+<ellipse cx="200" cy="500" rx="260" ry="34" fill="#9ed8c4" opacity=".28" filter="url(#${p}b)"/>
+${fire}
+${trees}
+<ellipse cx="90" cy="540" rx="250" ry="30" fill="#b8e6d6" opacity=".22" filter="url(#${p}b)"/>
+<ellipse cx="320" cy="560" rx="230" ry="26" fill="#b8e6d6" opacity=".18" filter="url(#${p}b)"/>
+<rect x="0" y="560" width="400" height="40" fill="#02100c"/></svg>`;
+    },
+
+    /* 極光：星空、極光簾幕、冰原倒影、象徵時空／量子的同心環 */
+    aurora: p => {
+      let c1 = '', c2 = '';
+      for (let x = -6; x <= 406; x += 5) {
+        const y1 = 210 + 58 * Math.sin(x / 52) + 26 * Math.sin(x / 21 + 1.3);
+        const h1 = 120 + 70 * Math.abs(Math.sin(x / 37 + .6));
+        const y2 = 168 + 46 * Math.sin(x / 64 + 2.1) + 18 * Math.sin(x / 17);
+        const h2 = 90 + 60 * Math.abs(Math.sin(x / 45 + 1.9));
+        c1 += `<rect x="${x}" y="${y1.toFixed(1)}" width="5.4" height="${h1.toFixed(1)}" fill="url(#${p}g1)"/>`;
+        c2 += `<rect x="${x}" y="${y2.toFixed(1)}" width="5.4" height="${h2.toFixed(1)}" fill="url(#${p}g2)"/>`;
+      }
+      const r = rng(11); let rings = '', dots = '';
+      [34, 62, 96, 134, 176].forEach((rad, i) => {
+        rings += `<circle cx="200" cy="250" r="${rad}" fill="none" stroke="#a8e6ff" stroke-opacity="${(.24 - i * .035).toFixed(3)}" stroke-width=".9"${i % 2 ? ' stroke-dasharray="2 6"' : ''}/>`;
+        const a = r() * Math.PI * 2;
+        dots += `<circle cx="${(200 + rad * Math.cos(a)).toFixed(1)}" cy="${(250 + rad * Math.sin(a)).toFixed(1)}" r="2.4" fill="#d4f6ff" filter="url(#${p}b)"/>`;
+      });
+      return `${SVG_OPEN}<defs>
+<linearGradient id="${p}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#01030a"/><stop offset=".55" stop-color="#071a30"/><stop offset="1" stop-color="#0d3345"/></linearGradient>
+<linearGradient id="${p}g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7dffc4" stop-opacity=".9"/><stop offset=".5" stop-color="#2ee6a8" stop-opacity=".32"/><stop offset="1" stop-color="#1aa0c0" stop-opacity="0"/></linearGradient>
+<linearGradient id="${p}g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cc92ff" stop-opacity=".85"/><stop offset=".55" stop-color="#7a5cff" stop-opacity=".28"/><stop offset="1" stop-color="#3a4ad0" stop-opacity="0"/></linearGradient>
+<linearGradient id="${p}l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b2a3c"/><stop offset="1" stop-color="#020812"/></linearGradient>
+<filter id="${p}b" x="-300%" y="-300%" width="700%" height="700%"><feGaussianBlur stdDeviation="2.4"/></filter>
+<filter id="${p}w" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="2.6"/></filter>
+<clipPath id="${p}k"><rect x="0" y="490" width="400" height="110"/></clipPath>
+<g id="${p}c" style="mix-blend-mode:screen" filter="url(#${p}w)">${c1}${c2}</g>
+</defs>
+<rect width="400" height="600" fill="url(#${p}s)"/>
+${starField(14, 110, 400, 430)}
+${rings}${dots}
+<text x="200" y="278" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="150" font-weight="700" fill="#bff3ff" opacity=".1">J</text>
+<use href="#${p}c"/>
+<rect x="0" y="490" width="400" height="110" fill="url(#${p}l)"/>
+<g clip-path="url(#${p}k)"><use href="#${p}c" transform="translate(0 740) scale(1 -.55)" opacity=".26"/></g>
+<polygon points="0,492 40,456 86,480 140,428 192,472 252,424 312,470 352,446 400,472 400,492" fill="#040a14"/>
+<polygon points="140,428 152,444 134,441" fill="#cfeaf5" opacity=".5"/><polygon points="252,424 264,440 246,437" fill="#cfeaf5" opacity=".5"/>
+<line x1="0" y1="492" x2="400" y2="492" stroke="#9ad8ee" stroke-opacity=".25"/>
+<rect x="0" y="560" width="400" height="40" fill="#01050c"/></svg>`;
+    }
+  };
+
+  function fillParagraphs(container, text) {
+    container.replaceChildren();
+    String(text || '').split(/\n+/).map(s => s.trim()).filter(Boolean).forEach(s => {
+      const p = document.createElement('p'); p.textContent = s; container.appendChild(p);
+    });
+  }
 
   /* ================= 資料讀取 ================= */
   async function fetchJson(url, label) {
@@ -613,14 +938,43 @@ button{font:inherit;color:inherit}
     const seen = new Set();
     const books = [];
     cfg.books.forEach(b => {
-      if (!b || typeof b.id !== 'string' || typeof b.title !== 'string' || typeof b.file !== 'string') {
-        console.warn('略過格式不完整的書籍（需要 id、title、file）：', b); return;
+      if (!b || typeof b.id !== 'string' || typeof b.title !== 'string') {
+        console.warn('略過格式不完整的書籍（需要 id、title）：', b); return;
       }
       if (seen.has(b.id)) { console.warn('略過重複的書籍 id：', b.id); return; }
       seen.add(b.id);
-      books.push({ ...b, _color: SPINE_COLORS.includes(b.color) ? b.color : SPINE_COLORS[books.length % SPINE_COLORS.length] });
+      const theme = ART[b.theme] ? b.theme : null;
+      const color = SPINE_COLORS.includes(b.color) ? b.color
+        : (theme && THEME_COLOR[theme]) || SPINE_COLORS[books.length % SPINE_COLORS.length];
+      // 沒有 file，或標記為 status:"soon"，就是「即將推出」：不載入內文，按鈕停用
+      const soon = b.status === 'soon' || typeof b.file !== 'string' || !b.file;
+      books.push({ ...b, _color: color, _theme: theme, _soon: soon, _series: null });
     });
-    return { site: cfg.site || {}, books };
+
+    // 系列：書籍以 "series": "<系列id>" 歸屬；系列內依 order（沒寫則依 config 順序）排列
+    const series = (Array.isArray(cfg.series) ? cfg.series : [])
+      .filter(s => s && typeof s.id === 'string' && typeof s.title === 'string')
+      .map(s => {
+        const list = books.filter(b => b.series === s.id)
+          .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+        return { ...s, books: list };
+      })
+      .filter(s => s.books.length);
+    series.forEach(s => s.books.forEach(b => { b._series = s; }));
+
+    // 書架項目：系列自成一組（附銘牌），沒有系列的書依序併成一組
+    const items = [], doneSeries = new Set();
+    books.forEach(b => {
+      if (b._series) {
+        if (doneSeries.has(b._series.id)) return;
+        doneSeries.add(b._series.id);
+        items.push({ series: b._series });
+      } else {
+        const last = items[items.length - 1];
+        if (last && last.books) last.books.push(b); else items.push({ books: [b] });
+      }
+    });
+    return { site: cfg.site || {}, books, series, items };
   }
 
   function normalizeChapters(data) {
@@ -784,40 +1138,111 @@ button{font:inherit;color:inherit}
     el.shelfRow.replaceChildren();
     if (!state.books.length) { setShelfStatus('書架目前是空的。請在 config.json 的 "books" 中加入書籍。'); return; }
 
-    state.books.forEach((book, i) => {
-      const h = hash(book.id);
-      const w = 68 + (h % 3) * 6;
-      const height = 300 + (h % 4) * 14;
-      const avail = height - 120;
-      const titleLen = [...book.title].length;
-      const subLen = [...(book.subtitle || '')].length;
-
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = `spine spine--${book._color}`;
-      btn.style.setProperty('--w', w);
-      btn.style.setProperty('--h', height);
-      btn.style.setProperty('--tfs', clamp(Math.floor(avail / titleLen / 1.1), 14, 28));
-      btn.style.setProperty('--sfs', clamp(Math.floor(avail / Math.max(1, subLen) / 1.2), 11, 15));
-      btn.style.animationDelay = `${i * 80}ms`;
-      btn.setAttribute('aria-label', `開啟《${book.title}》${[book.volume, book.subtitle].filter(Boolean).join(' ')}`);
-
-      const face = document.createElement('span'); face.className = 'spine-face';
-      const text = document.createElement('span'); text.className = 'spine-text';
-      const t = document.createElement('span'); t.className = 'spine-title'; t.textContent = book.title;
-      text.appendChild(t);
-      if (book.subtitle) {
-        const s = document.createElement('span'); s.className = 'spine-sub'; s.textContent = book.subtitle;
-        text.appendChild(s);
+    let n = 0;
+    state.items.forEach(item => {
+      const group = document.createElement('div');
+      group.className = 'shelf-group';
+      if (item.series) {
+        const plate = document.createElement('button');
+        plate.type = 'button'; plate.className = 'series-plate';
+        plate.textContent = `${item.series.title}　›`;
+        plate.setAttribute('aria-label', `開啟系列：${item.series.title}`);
+        plate.addEventListener('click', () => openSeries(item.series));
+        group.appendChild(plate);
       }
-      face.appendChild(text);
-      const orn = document.createElement('span'); orn.className = 'spine-orn'; orn.setAttribute('aria-hidden', 'true'); orn.textContent = '✦';
-
-      btn.append(face, orn);
-      btn.addEventListener('click', () => openBook(book));
-      el.shelfRow.appendChild(btn);
+      const row = document.createElement('div');
+      row.className = 'shelf-group-books';
+      (item.series ? item.series.books : item.books).forEach(book => row.appendChild(makeSpine(book, n++)));
+      group.appendChild(row);
+      el.shelfRow.appendChild(group);
     });
     updateHint();
+  }
+
+  function makeSpine(book, i) {
+    const h = hash(book.id);
+    const titleLen = [...book.title].length;
+    const subLen = [...(book.subtitle || '')].length;
+    const w = 72 + (h % 3) * 6;
+    const height = Math.max(300 + (h % 4) * 14, 120 + Math.ceil(titleLen * 22 * 1.2)); // 書名越長，書背越高
+    const avail = height - 120;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `spine spine--${book._color}`;
+    btn.style.setProperty('--w', w);
+    btn.style.setProperty('--h', height);
+    btn.style.setProperty('--tfs', clamp(Math.floor(avail / titleLen / 1.2), 14, 28));
+    btn.style.setProperty('--sfs', clamp(Math.floor(avail / Math.max(1, subLen) / 1.2), 11, 15));
+    btn.style.animationDelay = `${i * 80}ms`;
+    btn.setAttribute('aria-label', `開啟《${book.title}》${[book.volume, book.subtitle].filter(Boolean).join(' ')}`);
+
+    const face = document.createElement('span'); face.className = 'spine-face';
+    const text = document.createElement('span'); text.className = 'spine-text';
+    const t = document.createElement('span'); t.className = 'spine-title'; t.textContent = book.title;
+    text.appendChild(t);
+    if (book.subtitle) {
+      const s = document.createElement('span'); s.className = 'spine-sub'; s.textContent = book.subtitle;
+      text.appendChild(s);
+    }
+    face.appendChild(text);
+    const orn = document.createElement('span'); orn.className = 'spine-orn'; orn.setAttribute('aria-hidden', 'true');
+    orn.textContent = (book._series && book._series.mark) || '✦';
+
+    btn.append(face, orn);
+    btn.addEventListener('click', () => openBook(book, 'shelf'));
+    return btn;
+  }
+
+  /* ================= 系列頁 ================= */
+  function progressText(book) {
+    if (book._soon) return { text: '即將推出', soon: true };
+    const p = getProgress(book.id);
+    return { text: p > 0 ? `已讀至第 ${p + 1} 章` : '尚未開始閱讀', soon: false };
+  }
+
+  function bookCard(book, i) {
+    const card = document.createElement('button');
+    card.type = 'button'; card.className = 'book-card'; card.dataset.color = book._color;
+    card.style.animationDelay = `${150 + i * 130}ms`;
+    card.setAttribute('aria-label', `開啟《${book.title}》${[book.volume, book.subtitle].filter(Boolean).join(' ')}`);
+
+    const poster = document.createElement('div'); poster.className = 'poster';
+    if (book._theme) poster.innerHTML = ART[book._theme](nextUid()); // 內容為程式內建的靜態 SVG，非來自設定檔
+    if (book.volume) { const v = document.createElement('span'); v.className = 'poster-vol'; v.textContent = book.volume; poster.appendChild(v); }
+    const pt = document.createElement('div'); pt.className = 'poster-text';
+    const title = document.createElement('p'); title.className = 'poster-title'; title.textContent = book.title; pt.appendChild(title);
+    if (book.subtitle) { const s = document.createElement('p'); s.className = 'poster-sub'; s.textContent = book.subtitle; pt.appendChild(s); }
+    poster.appendChild(pt);
+
+    const meta = document.createElement('div'); meta.className = 'card-meta';
+    if (book.titleEn) { const en = document.createElement('p'); en.className = 'card-en'; en.textContent = book.titleEn; meta.appendChild(en); }
+    const st = progressText(book);
+    const status = document.createElement('p'); status.className = 'card-status' + (st.soon ? ' soon' : ''); status.textContent = st.text;
+    meta.appendChild(status);
+
+    card.append(poster, meta);
+    card.addEventListener('click', () => openBook(book, 'series'));
+    return card;
+  }
+
+  function renderSeries(s) {
+    el.seriesTitle.textContent = s.title;
+    el.seriesEn.textContent = s.titleEn || ''; el.seriesEn.hidden = !s.titleEn;
+    el.seriesTags.replaceChildren(...(Array.isArray(s.genres) ? s.genres : []).map(g => {
+      const t = document.createElement('span'); t.className = 'tag'; t.textContent = g; return t;
+    }));
+    fillParagraphs(el.seriesDesc, s.synopsis); el.seriesDesc.hidden = !s.synopsis;
+    el.seriesQuote.textContent = s.question ? String(s.question).replace(/^「|」$/g, '') : '';
+    el.seriesQuote.hidden = !s.question;
+    el.seriesGrid.replaceChildren(...s.books.map(bookCard));
+  }
+
+  function openSeries(s) {
+    state.series = s;
+    renderSeries(s);
+    document.title = `${s.title} - ${state.siteTitle}`;
+    showView('series');
   }
 
   function setShelfStatus(message, isError = false) {
@@ -847,18 +1272,34 @@ button{font:inherit;color:inherit}
     store.set(KEY.progress, p);
   }
   function updateReadLabel() {
-    el.readBtn.textContent = state.book && getProgress(state.book.id) > 0 ? '繼續閱讀' : '開始閱讀';
+    const b = state.book;
+    const soon = !!(b && b._soon);
+    el.readBtn.disabled = soon || state.loadingBook;
+    el.readBtn.classList.toggle('is-soon', soon);
+    el.readBtn.textContent = soon ? '敬請期待' : (b && getProgress(b.id) > 0 ? '繼續閱讀' : '開始閱讀');
   }
 
-  function openBook(book) {
+  function openBook(book, from = 'shelf') {
     state.book = book;
+    state.coverFrom = from === 'series' && book._series ? 'series' : 'shelf';
     el.views.cover.dataset.color = book._color;
+    el.coverBack.textContent = state.coverFrom === 'series' ? '← 回系列' : '← 回書架';
+
     el.coverTitle.textContent = book.title;
+    const len = [...book.title].length;   // 書名越長字級越小，避免在封面上被擠成多行
+    el.coverTitle.style.fontSize = `min(${clamp(Math.floor(560 / len / 1.15), 32, 92)}px, ${(88 / len / 1.15).toFixed(2)}vw)`;
+    el.coverEn.textContent = book.titleEn || ''; el.coverEn.hidden = !book.titleEn;
 
     const sub = [book.volume, book.subtitle].filter(Boolean).join('：');
     el.coverSub.textContent = sub; el.coverSub.hidden = !sub;
     el.coverAuthor.textContent = book.author ? `作者　${book.author}` : ''; el.coverAuthor.hidden = !book.author;
-    el.coverSynopsis.textContent = book.synopsis || ''; el.coverCard.hidden = !book.synopsis;
+    fillParagraphs(el.coverSynopsis, book.synopsis); el.coverCard.hidden = !book.synopsis;
+    el.coverArt.innerHTML = book._theme ? ART[book._theme](nextUid()) : ''; // 靜態內建 SVG
+
+    if (book._series) {
+      el.coverSeries.textContent = `◈　所屬系列　${book._series.title}`;
+      el.coverSeries.hidden = false;
+    } else el.coverSeries.hidden = true;
 
     setCoverMsg('');
     updateReadLabel();
@@ -866,12 +1307,12 @@ button{font:inherit;color:inherit}
     showView('cover');
 
     // 背景預先載入內文，點「開始閱讀」時通常已就緒
-    loadBook(book).catch(err => { if (state.book === book) setCoverMsg(err.message); });
+    if (!book._soon) loadBook(book).catch(err => { if (state.book === book) setCoverMsg(err.message); });
   }
 
   async function startReading() {
     const book = state.book;
-    if (!book || state.loadingBook) return;
+    if (!book || book._soon || state.loadingBook) return;
     state.loadingBook = true;
     el.readBtn.disabled = true;
     el.readBtn.textContent = '載入中…';
@@ -1000,7 +1441,12 @@ button{font:inherit;color:inherit}
 
   /* ================= 事件綁定 ================= */
   function bindEvents() {
-    el.coverBack.addEventListener('click', () => showView('shelf'));
+    el.coverBack.addEventListener('click', () => {
+      if (state.coverFrom === 'series' && state.book && state.book._series) openSeries(state.book._series);
+      else showView('shelf');
+    });
+    el.coverSeries.addEventListener('click', () => { if (state.book && state.book._series) openSeries(state.book._series); });
+    el.seriesBack.addEventListener('click', () => showView('shelf'));
     el.readBtn.addEventListener('click', startReading);
     el.homeBtn.addEventListener('click', () => { closeMenu(); showView('shelf'); });
 
@@ -1069,9 +1515,10 @@ button{font:inherit;color:inherit}
     bindEvents();
 
     try {
-      const { site, books } = await loadConfig();
+      const { site, books, items } = await loadConfig();
       state.siteTitle = site.title || '線上書架';
       state.books = books;
+      state.items = items;
       el.siteTitle.textContent = state.siteTitle;
       el.siteTagline.textContent = site.tagline || '';
       document.title = state.siteTitle;
