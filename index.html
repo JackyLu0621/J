@@ -3,8 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>線上書架</title>
+<title>J PORTAL － J 無界之門</title>
 <meta name="theme-color" content="#121212">
+<meta name="application-name" content="J PORTAL">
+<meta name="apple-mobile-web-app-title" content="J PORTAL">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f6e7b8'/%3E%3Cstop offset='1' stop-color='%23b98f3e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%23121212'/%3E%3Ctext x='32' y='48' text-anchor='middle' font-family='Georgia,serif' font-size='46' font-weight='700' fill='url(%23g)'%3EJ%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
@@ -579,6 +582,35 @@ button{font:inherit;color:inherit}
   .series-desc{padding:20px}
   .series-grid{gap:44px}
 }
+/* =====================================================
+   J PORTAL：書架標題、點書動畫、特效畫布
+   ===================================================== */
+.shelf-title{font-size:clamp(28px,7vw,56px);letter-spacing:.3em;padding-left:.3em;line-height:1.1}
+.shelf-zh{margin:14px 0 0;font-family:var(--font-serif);font-size:clamp(14px,2.4vw,18px);letter-spacing:.55em;padding-left:.55em;color:#cdbd8e}
+.shelf-tagline{
+  display:flex; align-items:center; justify-content:center; gap:14px; margin:14px 0 0;
+  font-family:var(--font-serif); font-size:clamp(10px,1.6vw,12px); letter-spacing:.5em; color:#857f72;
+}
+.shelf-tagline:empty{display:none}
+.shelf-tagline::before,.shelf-tagline::after{content:"";width:clamp(18px,5vw,40px);height:1px;background:linear-gradient(90deg,transparent,rgba(217,178,95,.55))}
+.shelf-tagline::after{background:linear-gradient(270deg,transparent,rgba(217,178,95,.55))}
+
+.fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:block}
+.fx-front{z-index:6}
+
+/* 點書：先播完上浮動畫，其他書同時變暗，再進入（電腦與手機一致） */
+.spine,.series-plate{transition:transform .5s var(--ease),box-shadow .5s var(--ease),filter .5s ease}
+.spine.is-picked{
+  transform:translateY(-24px) scale(1.07); z-index:4; filter:brightness(1.18);
+  box-shadow:inset 3px 0 5px rgba(255,255,255,.22),inset -5px 0 9px rgba(0,0,0,.4),0 30px 38px rgba(0,0,0,.65),0 0 56px var(--glow);
+}
+.is-picking .spine:not(.is-picked){filter:brightness(.45) saturate(.6);transform:scale(.985)}
+.series-plate.is-picked{transform:translateY(-4px) scale(1.07);filter:brightness(1.15);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 0 rgba(0,0,0,.25),0 16px 28px rgba(0,0,0,.6),0 0 40px rgba(240,200,110,.55)}
+.is-picking .series-plate:not(.is-picked){filter:brightness(.5)}
+.book-card{transition:opacity .5s ease,filter .5s ease}
+.book-card.is-picked .poster{transform:translateY(-12px) scale(1.035);box-shadow:0 38px 64px rgba(0,0,0,.66),0 0 64px rgba(var(--ac),.55),0 0 0 1px rgba(var(--ac),.7)}
+.is-picking .book-card:not(.is-picked){opacity:.32;filter:saturate(.5)}
+.is-picking *{pointer-events:none}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
@@ -589,8 +621,10 @@ button{font:inherit;color:inherit}
 <!-- ========== 第一層：書架 ========== -->
 <div id="shelfView" class="view shelf-view active">
   <div class="ambient" aria-hidden="true"></div>
+  <canvas class="fx fx-back" id="fxBack" aria-hidden="true"></canvas>
   <header class="shelf-head">
-    <h1 class="shelf-title" id="siteTitle">私人圖書館</h1>
+    <h1 class="shelf-title" id="siteTitle">J PORTAL</h1>
+    <p class="shelf-zh" id="siteZh"></p>
     <p class="shelf-tagline" id="siteTagline"></p>
   </header>
   <section class="shelf-stage" aria-label="書架">
@@ -604,6 +638,7 @@ button{font:inherit;color:inherit}
     </div>
     <p class="shelf-hint" id="shelfHint" hidden>← 左右滑動，瀏覽更多書籍 →</p>
   </section>
+  <canvas class="fx fx-front" id="fxFront" aria-hidden="true"></canvas>
 </div>
 
 <!-- ========== 第二層：封面 ========== -->
@@ -724,7 +759,7 @@ button{font:inherit;color:inherit}
     coverArt: $('#coverArt'), coverEn: $('#coverEn'), coverSeries: $('#coverSeries'),
     seriesBack: $('#seriesBack'), seriesStars: $('#seriesStars'), seriesTitle: $('#seriesTitle'), seriesEn: $('#seriesEn'),
     seriesTags: $('#seriesTags'), seriesDesc: $('#seriesDesc'), seriesQuote: $('#seriesQuote'), seriesGrid: $('#seriesGrid'),
-    siteTitle: $('#siteTitle'), siteTagline: $('#siteTagline'),
+    siteTitle: $('#siteTitle'), siteZh: $('#siteZh'), siteTagline: $('#siteTagline'),
     scroller: $('#shelfScroller'), shelfRow: $('#shelfRow'), shelfHint: $('#shelfHint'),
     coverTitle: $('#coverTitle'), coverSub: $('#coverSub'), coverAuthor: $('#coverAuthor'),
     coverCard: $('#coverCard'), coverSynopsis: $('#coverSynopsis'), coverMsg: $('#coverMsg'),
@@ -740,7 +775,10 @@ button{font:inherit;color:inherit}
   /* ================= 狀態 ================= */
   const state = {
     view: 'shelf',
-    siteTitle: '線上書架',
+    siteTitle: 'J PORTAL',
+    siteZh: '',
+    defaultAuthor: '',
+    picking: false,     // 點書動畫播放中（鎖住點擊）
     books: [],
     items: [],          // 書架項目：{ series } 或 { books:[…] }
     series: null,       // 目前開啟的系列
@@ -1109,6 +1147,248 @@ ${rings}${dots}
     }, 260);
   }
 
+  /* ================= 書架特效（兩張畫布） =================
+     後層 fxBack ：漂浮光點、流星（在書架後方）
+     前層 fxFront：聚光束、光束內的塵埃、點書時的粒子（疊在書上，只用淡淡的加亮效果）
+     只在書架頁執行；離開書架、分頁被切到背景時完全暫停；「減少動態效果」時只畫靜態畫面。 */
+  const motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+  const reduced = () => !!motionQuery.matches;
+  const shelfStage = $('.shelf-stage');
+  const COLOR_RGB = { gold: [217, 178, 95], emerald: [52, 168, 130], sapphire: [91, 141, 224], crimson: [212, 88, 106] };
+
+  const fx = (() => {
+    const host = el.views.shelf;
+    const back = $('#fxBack'), front = $('#fxFront');
+    const bctx = back.getContext('2d'), fctx = front.getContext('2d');
+    const GOLD = [255, 228, 165], EMERALD = [120, 232, 190], SAPPHIRE = [140, 184, 255];
+    const sprites = new Map();
+    const par = { tx: 0, ty: 0, x: 0, y: 0 };             // 視差：目標值與平滑後的值（-1 ~ 1）
+    let w = 0, h = 0, dpr = 1, running = false, raf = 0, last = 0, t = 0, nextStar = 0;
+    let orbs = [], motes = [], stars = [], bursts = [];
+    let cone = { cx: 0, top: -30, bottom: 400, hw: 300 };
+    const rnd = (a, b) => a + Math.random() * (b - a);
+
+    function sprite(rgb) {
+      const key = rgb.join(',');
+      let c = sprites.get(key);
+      if (!c) {
+        c = document.createElement('canvas'); c.width = c.height = 64;
+        const g = c.getContext('2d');
+        const grd = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+        grd.addColorStop(0, `rgba(${key},1)`); grd.addColorStop(.25, `rgba(${key},.45)`); grd.addColorStop(1, `rgba(${key},0)`);
+        g.fillStyle = grd; g.fillRect(0, 0, 64, 64);
+        sprites.set(key, c);
+      }
+      return c;
+    }
+
+    function populate() {
+      const nOrb = clamp(Math.round(w * h / 28000), 22, 46);      // 低調：數量少、移動慢
+      const nMote = clamp(Math.round(cone.hw * (cone.bottom - cone.top) / 4200), 24, 64);
+      orbs = Array.from({ length: nOrb }, () => {
+        const roll = Math.random();
+        const c = roll < .72 ? GOLD : roll < .86 ? EMERALD : SAPPHIRE;
+        return { x: Math.random() * w, y: Math.random() * h, z: rnd(.25, 1), r: rnd(1, 3), vx: rnd(-6, 6), vy: rnd(-9, -2),
+                 ph: rnd(0, 6.28), sp: rnd(.4, 1.1), a: rnd(.35, .85), spr: sprite(c) };
+      });
+      motes = Array.from({ length: nMote }, () => ({ u: rnd(-1, 1), v: Math.random(), r: rnd(.6, 1.7), ph: rnd(0, 6.28), sp: rnd(.5, 1.4), vv: rnd(.006, .02) }));
+    }
+
+    function resize() {
+      const nw = host.clientWidth, nh = host.clientHeight;
+      if (!nw || !nh) return;                                    // 書架被隱藏時不處理
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const changed = nw !== w || nh !== h;
+      w = nw; h = nh;
+      [back, front].forEach(c => { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); });
+      bctx.setTransform(dpr, 0, 0, dpr, 0, 0); fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const sr = el.scroller.getBoundingClientRect(), hr = host.getBoundingClientRect();
+      cone = { cx: w / 2, top: -30, bottom: clamp(sr.bottom - hr.top - 34, h * .4, h), hw: Math.min(w * .46, 430) };
+      if (changed || !orbs.length) populate();
+      if (!running) render(0, false);
+    }
+
+    function spawnStar(delay = 0) {
+      const ang = rnd(24, 36) * Math.PI / 180, sp = rnd(650, 950);
+      stars.push({ x: rnd(w * .35, w * 1.05), y: rnd(-10, h * .32), vx: -Math.cos(ang) * sp, vy: Math.sin(ang) * sp,
+                   len: rnd(110, 200), age: 0, max: rnd(.9, 1.4), d: delay });
+    }
+
+    function render(dt, animate) {
+      par.x += (par.tx - par.x) * Math.min(1, dt * 3);
+      par.y += (par.ty - par.y) * Math.min(1, dt * 3);
+
+      /* ---- 後層：光點、流星 ---- */
+      bctx.clearRect(0, 0, w, h);
+      bctx.globalCompositeOperation = 'lighter';
+      orbs.forEach(o => {
+        if (animate) {
+          o.x += (o.vx + Math.sin(t * o.sp + o.ph) * 5) * dt;
+          o.y += (o.vy + Math.cos(t * o.sp * .8 + o.ph) * 4) * dt;
+          if (o.y < -20) { o.y = h + 20; o.x = Math.random() * w; }
+          if (o.x < -20) o.x = w + 20; else if (o.x > w + 20) o.x = -20;
+        }
+        const tw = .6 + .4 * Math.sin(t * o.sp * 1.6 + o.ph * 2);
+        const s = o.r * 7 * (.6 + .4 * o.z);
+        bctx.globalAlpha = o.a * tw * (.5 + .5 * o.z);
+        bctx.drawImage(o.spr, o.x + par.x * 26 * o.z - s / 2, o.y + par.y * 18 * o.z - s / 2, s, s);
+      });
+      bctx.globalAlpha = 1;
+      if (animate) {
+        if (t >= nextStar) {
+          spawnStar(); if (Math.random() < .15) spawnStar(.35);
+          nextStar = t + rnd(6, 12);
+        }
+        stars = stars.filter(s => {
+          if (s.d > 0) { s.d -= dt; return true; }
+          s.age += dt; s.x += s.vx * dt; s.y += s.vy * dt;
+          const k = s.age / s.max; if (k >= 1) return false;
+          const a = k < .15 ? k / .15 : 1 - (k - .15) / .85;
+          const sp = Math.hypot(s.vx, s.vy), tx = s.x - s.vx / sp * s.len, ty = s.y - s.vy / sp * s.len;
+          const g = bctx.createLinearGradient(s.x, s.y, tx, ty);
+          g.addColorStop(0, `rgba(255,248,225,${(a * .95).toFixed(3)})`);
+          g.addColorStop(.25, `rgba(255,226,160,${(a * .35).toFixed(3)})`);
+          g.addColorStop(1, 'rgba(255,226,160,0)');
+          bctx.strokeStyle = g; bctx.lineWidth = 1.4; bctx.lineCap = 'round';
+          bctx.beginPath(); bctx.moveTo(s.x, s.y); bctx.lineTo(tx, ty); bctx.stroke();
+          bctx.globalAlpha = a; bctx.drawImage(sprite(GOLD), s.x - 8, s.y - 8, 16, 16); bctx.globalAlpha = 1;
+          return true;
+        });
+      }
+
+      /* ---- 前層：聚光束、塵埃、點書粒子 ---- */
+      fctx.clearRect(0, 0, w, h);
+      fctx.globalCompositeOperation = 'lighter';
+      const breathe = .88 + .12 * Math.sin(t * .35);
+      const cx = cone.cx + par.x * 10;
+      [[1, .024], [.88, .024], [.76, .024], [.64, .024], [.52, .024], [.4, .024]].forEach(([k, a]) => {
+        const hwTop = cone.hw * .1 * k, hwBot = cone.hw * k;
+        const g = fctx.createLinearGradient(0, cone.top, 0, cone.bottom);
+        g.addColorStop(0, `rgba(255,226,160,${(a * .4 * breathe).toFixed(4)})`);
+        g.addColorStop(.35, `rgba(255,226,160,${(a * 1.5 * breathe).toFixed(4)})`);
+        g.addColorStop(1, `rgba(255,226,160,${(a * .45 * breathe).toFixed(4)})`);
+        fctx.fillStyle = g;
+        fctx.beginPath();
+        fctx.moveTo(cx - hwTop, cone.top); fctx.lineTo(cx + hwTop, cone.top);
+        fctx.lineTo(cx + hwBot, cone.bottom); fctx.lineTo(cx - hwBot, cone.bottom);
+        fctx.closePath(); fctx.fill();
+      });
+      const pool = fctx.createRadialGradient(cx, cone.bottom, 0, cx, cone.bottom, cone.hw);   // 光落在書架上的光池
+      pool.addColorStop(0, `rgba(255,226,160,${(.09 * breathe).toFixed(4)})`); pool.addColorStop(1, 'rgba(255,226,160,0)');
+      fctx.save(); fctx.translate(0, cone.bottom); fctx.scale(1, .12); fctx.translate(0, -cone.bottom);
+      fctx.fillStyle = pool; fctx.fillRect(cx - cone.hw, cone.bottom - cone.hw, cone.hw * 2, cone.hw * 2); fctx.restore();
+
+      motes.forEach(m => {
+        if (animate) { m.v -= m.vv * dt; if (m.v < 0) { m.v = 1; m.u = rnd(-1, 1); } }
+        const v = m.v, hwv = cone.hw * (.1 + .9 * v);
+        const x = cx + (m.u + Math.sin(t * .5 * m.sp + m.ph) * .08) * hwv * .92;
+        const y = cone.top + (cone.bottom - cone.top) * v + Math.cos(t * .4 * m.sp + m.ph) * 3;
+        const tw = .55 + .45 * Math.sin(t * 1.3 * m.sp + m.ph);
+        const a = clamp(.55 * (1 - Math.abs(m.u) * .55) * tw * Math.sin(Math.PI * Math.min(1, v)), 0, 1);
+        fctx.fillStyle = `rgba(255,236,190,${a.toFixed(3)})`;
+        fctx.beginPath(); fctx.arc(x, y, m.r, 0, 6.2832); fctx.fill();
+      });
+
+      bursts = bursts.filter(p => {
+        p.age += dt; if (p.age >= p.life) return false;
+        p.vx *= 1 - 1.6 * dt; p.vy = p.vy * (1 - 1.2 * dt) - 18 * dt;
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        const k = p.age / p.life, s = p.r * 6 * (1 - .4 * k);
+        fctx.globalAlpha = Math.pow(1 - k, 1.6) * .95;
+        fctx.drawImage(p.spr, p.x - s / 2, p.y - s / 2, s, s);
+        return true;
+      });
+      fctx.globalAlpha = 1;
+    }
+
+    function frame(now) {
+      if (!running) return;
+      raf = requestAnimationFrame(frame);
+      const dt = Math.min(.05, (now - last) / 1000 || .016);
+      last = now; t += dt;
+      render(dt, true);
+    }
+
+    function start() {
+      if (running) return;
+      resize();
+      if (!w) return;
+      if (reduced()) { render(0, false); return; }
+      running = true; last = performance.now();
+      if (!nextStar || nextStar < t) nextStar = t + rnd(2.5, 4.5);
+      raf = requestAnimationFrame(frame);
+    }
+    function stop() { running = false; cancelAnimationFrame(raf); }
+
+    // 點書時從書背噴出該書顏色的光點
+    function burst(target, rgb) {
+      if (!running || !rgb) return;
+      const er = target.getBoundingClientRect(), hr = host.getBoundingClientRect();
+      const left = er.left - hr.left, top = er.top - hr.top;
+      const col = rgb.map(v => Math.round(v + (255 - v) * .35));
+      const spr = sprite(col);
+      for (let i = 0; i < 34; i++) {
+        bursts.push({ x: left + rnd(0, er.width), y: top + rnd(0, Math.min(er.height * .15, 40)), vx: rnd(-55, 55), vy: -rnd(60, 200),
+                      r: rnd(1.6, 4), age: 0, life: rnd(.8, 1.4), spr });
+      }
+      for (let i = 0; i < 12; i++) {
+        const side = Math.random() < .5 ? -1 : 1;
+        bursts.push({ x: left + (side < 0 ? 0 : er.width), y: top + rnd(0, er.height), vx: side * rnd(20, 90), vy: -rnd(10, 80),
+                      r: rnd(1.4, 3), age: 0, life: rnd(.7, 1.2), spr });
+      }
+      if (bursts.length > 140) bursts.splice(0, bursts.length - 140);
+    }
+
+    // 視差：電腦靠滑鼠位置；手機靠書架橫向捲動，或（Android 等不需授權的裝置）靠裝置傾斜
+    host.addEventListener('pointermove', e => {
+      if (e.pointerType !== 'mouse' || !w) return;
+      const r = host.getBoundingClientRect();
+      par.tx = ((e.clientX - r.left) / w - .5) * 2; par.ty = ((e.clientY - r.top) / h - .5) * 2;
+    });
+    host.addEventListener('pointerleave', () => { par.tx = 0; par.ty = 0; });
+    el.scroller.addEventListener('scroll', () => {
+      const m = el.scroller.scrollWidth - el.scroller.clientWidth;
+      if (m > 4) par.tx = (el.scroller.scrollLeft / m - .5) * 2;
+    }, { passive: true });
+    window.addEventListener('deviceorientation', e => {
+      if (!running || e.gamma == null) return;
+      par.tx = clamp(e.gamma / 25, -1, 1); par.ty = clamp(((e.beta == null ? 45 : e.beta) - 45) / 25, -1, 1);
+    }, { passive: true });
+
+    if ('ResizeObserver' in window) {
+      let pending = false;
+      const ro = new ResizeObserver(() => {
+        if (pending) return; pending = true;
+        requestAnimationFrame(() => { pending = false; resize(); });
+      });
+      ro.observe(host); ro.observe(el.scroller);
+    } else window.addEventListener('resize', resize);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stop(); else if (state.view === 'shelf') start();
+    });
+    if (motionQuery.addEventListener) motionQuery.addEventListener('change', () => {
+      if (state.view === 'shelf') { stop(); start(); }
+    });
+
+    return { start, stop, burst, resize };
+  })();
+
+  /* ---- 點選：先播完上浮動畫（其他書同時變暗、噴出光點），再進入 ---- */
+  function pick(target, container, rgb, go) {
+    if (state.picking) return;
+    if (reduced()) { go(); return; }
+    state.picking = true;
+    target.classList.add('is-picked'); container.classList.add('is-picking');
+    fx.burst(target, rgb);
+    setTimeout(() => {
+      go();
+      setTimeout(() => {
+        target.classList.remove('is-picked'); container.classList.remove('is-picking'); state.picking = false;
+      }, 600);
+    }, 520);
+  }
+
   /* ================= 畫面切換（淡入淡出） ================= */
   let viewToken = 0;
   function showView(name) {
@@ -1126,7 +1406,7 @@ ${rings}${dots}
       next.hidden = false;
       window.scrollTo(0, 0);
       requestAnimationFrame(() => requestAnimationFrame(() => { if (token === viewToken) next.classList.add('active'); }));
-      if (name === 'shelf') { document.title = state.siteTitle; updateHint(); }
+      if (name === 'shelf') { document.title = shelfTitle(); updateHint(); fx.start(); } else fx.stop();
     };
 
     if (cur) { cur.classList.remove('active'); setTimeout(reveal, 320); }
@@ -1147,7 +1427,7 @@ ${rings}${dots}
         plate.type = 'button'; plate.className = 'series-plate';
         plate.textContent = `${item.series.title}　›`;
         plate.setAttribute('aria-label', `開啟系列：${item.series.title}`);
-        plate.addEventListener('click', () => openSeries(item.series));
+        plate.addEventListener('click', () => pick(plate, shelfStage, COLOR_RGB.gold, () => openSeries(item.series)));
         group.appendChild(plate);
       }
       const row = document.createElement('div');
@@ -1190,7 +1470,7 @@ ${rings}${dots}
     orn.textContent = (book._series && book._series.mark) || '✦';
 
     btn.append(face, orn);
-    btn.addEventListener('click', () => openBook(book, 'shelf'));
+    btn.addEventListener('click', () => pick(btn, shelfStage, COLOR_RGB[book._color], () => openBook(book, 'shelf')));
     return btn;
   }
 
@@ -1222,7 +1502,7 @@ ${rings}${dots}
     meta.appendChild(status);
 
     card.append(poster, meta);
-    card.addEventListener('click', () => openBook(book, 'series'));
+    card.addEventListener('click', () => pick(card, el.seriesGrid, COLOR_RGB[book._color], () => openBook(book, 'series')));
     return card;
   }
 
@@ -1243,6 +1523,10 @@ ${rings}${dots}
     renderSeries(s);
     document.title = `${s.title} - ${state.siteTitle}`;
     showView('series');
+  }
+
+  function shelfTitle() {
+    return state.siteZh ? `${state.siteTitle} － ${state.siteZh}` : state.siteTitle;
   }
 
   function setShelfStatus(message, isError = false) {
@@ -1292,7 +1576,8 @@ ${rings}${dots}
 
     const sub = [book.volume, book.subtitle].filter(Boolean).join('：');
     el.coverSub.textContent = sub; el.coverSub.hidden = !sub;
-    el.coverAuthor.textContent = book.author ? `作者　${book.author}` : ''; el.coverAuthor.hidden = !book.author;
+    const author = book.author || state.defaultAuthor;
+    el.coverAuthor.textContent = author ? `作者　${author}` : ''; el.coverAuthor.hidden = !author;
     fillParagraphs(el.coverSynopsis, book.synopsis); el.coverCard.hidden = !book.synopsis;
     el.coverArt.innerHTML = book._theme ? ART[book._theme](nextUid()) : ''; // 靜態內建 SVG
 
@@ -1516,16 +1801,20 @@ ${rings}${dots}
 
     try {
       const { site, books, items } = await loadConfig();
-      state.siteTitle = site.title || '線上書架';
+      state.siteTitle = site.title || 'J PORTAL';
+      state.siteZh = site.titleZh || '';
+      state.defaultAuthor = site.author || '';
       state.books = books;
       state.items = items;
       el.siteTitle.textContent = state.siteTitle;
+      el.siteZh.textContent = state.siteZh; el.siteZh.hidden = !state.siteZh;
       el.siteTagline.textContent = site.tagline || '';
-      document.title = state.siteTitle;
+      document.title = shelfTitle();
       renderShelf();
     } catch (err) {
       setShelfStatus(err.message, true);
     }
+    fx.start();
   }
 
   init();
