@@ -271,7 +271,7 @@ button{font:inherit;color:inherit}
 .fs-value{min-width:2ch;text-align:center;font-size:13px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
 
 .dropdown{min-width:0}
-.dd-toggle{max-width:min(260px,38vw);min-width:0}
+.dd-toggle{max-width:min(160px,34vw);min-width:0}
 .dd-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .dd-caret{font-size:11px;opacity:.7;transition:transform .25s ease}
 .dd-toggle[aria-expanded="true"] .dd-caret{transform:rotate(180deg)}
@@ -477,6 +477,13 @@ button{font:inherit;color:inherit}
   background:radial-gradient(ellipse at 50% 38%,transparent 0,rgba(12,12,14,.35) 62%,rgba(12,12,14,.85) 100%),linear-gradient(180deg,rgba(12,12,14,.1),rgba(12,12,14,.6));
 }
 @keyframes artBreath{from{transform:translateX(-50%) scale(1)}to{transform:translateX(-50%) scale(1.06)}}
+/* 封面最下方的整寬圖片：左右貼齊螢幕、貼齊頁面底部 */
+.cover-image{
+  position:relative; align-self:stretch; margin:56px -24px -56px; padding:0; line-height:0;
+  border-top:1px solid rgba(var(--accent-rgb),.4); box-shadow:0 -18px 40px rgba(0,0,0,.45);
+}
+.cover-image img{display:block;width:100%;height:auto;opacity:0;transition:opacity .9s ease}
+.cover-image img.loaded{opacity:1}
 .cover-en{margin:14px 0 0;font-family:var(--font-serif);font-size:clamp(12px,2vw,16px);letter-spacing:.3em;padding-left:.3em;color:#b9b2a2}
 .cover-sub{margin-top:14px}
 .cover-synopsis p{margin:0 0 .9em}
@@ -518,10 +525,8 @@ button{font:inherit;color:inherit}
   filter:drop-shadow(0 8px 28px rgba(217,178,95,.3));
 }
 .series-en{margin:16px 0 0;font-family:var(--font-serif);font-size:clamp(13px,2.2vw,18px);letter-spacing:.34em;padding-left:.34em;color:#b9b2a2}
-.series-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:760px;margin:28px auto 0}
-.series-tags .tag{padding:5px 14px;border:1px solid rgba(217,178,95,.34);border-radius:999px;font-size:12.5px;letter-spacing:.14em;color:#dcc98f;background:rgba(217,178,95,.06)}
 .series-desc{
-  max-width:720px; margin:40px auto 0; padding:26px 30px; border-radius:18px;
+  max-width:720px; margin:44px auto 0; padding:26px 30px; border-radius:18px;
   background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1);
   -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
   font-family:var(--font-serif); color:#cdc7b9; line-height:2; font-size:16px; letter-spacing:.04em;
@@ -656,6 +661,7 @@ button{font:inherit;color:inherit}
     <button type="button" class="series-link" id="coverSeries" hidden></button>
     <p class="cover-msg" id="coverMsg" role="status" aria-live="polite"></p>
   </div>
+  <figure class="cover-image" id="coverImage" hidden><img id="coverImg" alt="" decoding="async"></figure>
 </section>
 
 <!-- ========== 系列頁 ========== -->
@@ -667,7 +673,6 @@ button{font:inherit;color:inherit}
       <p class="series-eyebrow">SERIES</p>
       <h2 class="series-title" id="seriesTitle"></h2>
       <p class="series-en" id="seriesEn"></p>
-      <div class="series-tags" id="seriesTags"></div>
     </header>
     <div class="series-desc" id="seriesDesc"></div>
     <blockquote class="series-quote" id="seriesQuote" hidden></blockquote>
@@ -756,9 +761,9 @@ button{font:inherit;color:inherit}
     body: document.body,
     root: document.documentElement,
     views: { shelf: $('#shelfView'), series: $('#seriesView'), cover: $('#coverView'), reader: $('#readerView') },
-    coverArt: $('#coverArt'), coverEn: $('#coverEn'), coverSeries: $('#coverSeries'),
+    coverImage: $('#coverImage'), coverImg: $('#coverImg'), coverArt: $('#coverArt'), coverEn: $('#coverEn'), coverSeries: $('#coverSeries'),
     seriesBack: $('#seriesBack'), seriesStars: $('#seriesStars'), seriesTitle: $('#seriesTitle'), seriesEn: $('#seriesEn'),
-    seriesTags: $('#seriesTags'), seriesDesc: $('#seriesDesc'), seriesQuote: $('#seriesQuote'), seriesGrid: $('#seriesGrid'),
+    seriesDesc: $('#seriesDesc'), seriesQuote: $('#seriesQuote'), seriesGrid: $('#seriesGrid'),
     siteTitle: $('#siteTitle'), siteZh: $('#siteZh'), siteTagline: $('#siteTagline'),
     scroller: $('#shelfScroller'), shelfRow: $('#shelfRow'), shelfHint: $('#shelfHint'),
     coverTitle: $('#coverTitle'), coverSub: $('#coverSub'), coverAuthor: $('#coverAuthor'),
@@ -1509,9 +1514,6 @@ ${rings}${dots}
   function renderSeries(s) {
     el.seriesTitle.textContent = s.title;
     el.seriesEn.textContent = s.titleEn || ''; el.seriesEn.hidden = !s.titleEn;
-    el.seriesTags.replaceChildren(...(Array.isArray(s.genres) ? s.genres : []).map(g => {
-      const t = document.createElement('span'); t.className = 'tag'; t.textContent = g; return t;
-    }));
     fillParagraphs(el.seriesDesc, s.synopsis); el.seriesDesc.hidden = !s.synopsis;
     el.seriesQuote.textContent = s.question ? String(s.question).replace(/^「|」$/g, '') : '';
     el.seriesQuote.hidden = !s.question;
@@ -1581,6 +1583,17 @@ ${rings}${dots}
     fillParagraphs(el.coverSynopsis, book.synopsis); el.coverCard.hidden = !book.synopsis;
     el.coverArt.innerHTML = book._theme ? ART[book._theme](nextUid()) : ''; // 靜態內建 SVG
 
+    // 封面最下方的圖片（config.json 的 "image"，例如 "images/Book_01.png"）
+    el.coverImg.classList.remove('loaded');
+    if (book.image) {
+      el.coverImg.alt = book.title;
+      el.coverImage.hidden = false;
+      el.coverImg.src = book.image;
+    } else {
+      el.coverImage.hidden = true;
+      el.coverImg.removeAttribute('src');
+    }
+
     if (book._series) {
       el.coverSeries.textContent = `◈　所屬系列　${book._series.title}`;
       el.coverSeries.hidden = false;
@@ -1645,6 +1658,15 @@ ${rings}${dots}
     });
   }
 
+  // 選單按鈕只顯示「第X章」；目錄清單裡仍是完整章名
+  function chapterShort(title, index) {
+    const t = String(title).trim();
+    const m = t.match(/^第\s*[0-9０-９零〇一二三四五六七八九十百千兩两]+\s*[章回節节篇卷集部話话]/);
+    if (m) return m[0].replace(/\s+/g, '');
+    const first = t.split(/[\s　:：－—\-·]+/)[0];   // 「序章　開場」→「序章」
+    return first && [...first].length <= 8 ? first : `第 ${index + 1} 章`;
+  }
+
   function renderChapter(index) {
     const ch = state.chapters[index];
     if (!ch) return;
@@ -1654,7 +1676,7 @@ ${rings}${dots}
     el.chapterTitle.textContent = ch.title;
     el.prose.replaceChildren(prepareContent(ch.html));
     enhanceContent();
-    el.chapterLabel.textContent = ch.title;
+    el.chapterLabel.textContent = chapterShort(ch.title, index);
 
     el.chapterWrap.classList.remove('is-in');
     void el.chapterWrap.offsetWidth; // 重新觸發動畫
@@ -1732,6 +1754,8 @@ ${rings}${dots}
     });
     el.coverSeries.addEventListener('click', () => { if (state.book && state.book._series) openSeries(state.book._series); });
     el.seriesBack.addEventListener('click', () => showView('shelf'));
+    el.coverImg.addEventListener('load', () => el.coverImg.classList.add('loaded'));
+    el.coverImg.addEventListener('error', () => { el.coverImage.hidden = true; }); // 找不到圖片就整塊隱藏，不顯示破圖
     el.readBtn.addEventListener('click', startReading);
     el.homeBtn.addEventListener('click', () => { closeMenu(); showView('shelf'); });
 
