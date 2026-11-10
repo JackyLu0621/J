@@ -5,6 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>J PORTAL － J 無界之門</title>
 <meta name="theme-color" content="#121212">
+<!-- 分享預覽（貼到 LINE、Facebook、Messenger 時顯示的卡片）。
+     ★ 上線前請把下面兩處的 https://YOUR-DOMAIN 換成你網站的實際網址（需要完整網址，社群網站才抓得到圖）。
+     分享圖在 images/share.jpg（1200×630）。換了網址或圖片後，可到 Facebook 分享偵錯工具按「重新擷取」更新快取。 -->
+<meta name="description" content="J PORTAL － J 無界之門。《J：神之遺序》長篇科幻懸疑小說，線上閱讀。ENTER THE UNKNOWN.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="J PORTAL">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:title" content="J PORTAL － J 無界之門">
+<meta property="og:description" content="ENTER THE UNKNOWN ｜《J：神之遺序》長篇科幻懸疑小說，線上閱讀。">
+<meta property="og:url" content="https://YOUR-DOMAIN/">
+<meta property="og:image" content="https://YOUR-DOMAIN/images/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="J PORTAL － J 無界之門，書架上的《J：神之遺序》三部作品">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="J PORTAL － J 無界之門">
+<meta name="twitter:description" content="ENTER THE UNKNOWN ｜《J：神之遺序》長篇科幻懸疑小說，線上閱讀。">
+<meta name="twitter:image" content="https://YOUR-DOMAIN/images/share.jpg">
 <meta name="application-name" content="J PORTAL">
 <meta name="apple-mobile-web-app-title" content="J PORTAL">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f6e7b8'/%3E%3Cstop offset='1' stop-color='%23b98f3e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%23121212'/%3E%3Ctext x='32' y='48' text-anchor='middle' font-family='Georgia,serif' font-size='46' font-weight='700' fill='url(%23g)'%3EJ%3C/text%3E%3C/svg%3E">
@@ -430,9 +448,19 @@ button{font:inherit;color:inherit}
 }
 .pager-btn:hover:not(:disabled){background:var(--chip-hover);transform:translateY(-2px)}
 .pager-btn:disabled{opacity:.35;cursor:not-allowed}
+.toast{
+  position:fixed; left:50%; bottom:max(28px,env(safe-area-inset-bottom)); z-index:400; max-width:calc(100vw - 40px);
+  padding:10px 20px; border-radius:999px; font-size:14px; letter-spacing:.12em; white-space:nowrap;
+  color:#f3ead2; background:rgba(20,20,22,.82); border:1px solid rgba(255,255,255,.14);
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); box-shadow:0 10px 30px rgba(0,0,0,.4);
+  opacity:0; transform:translate(-50%,12px); pointer-events:none; transition:opacity .35s ease,transform .35s var(--ease);
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.pager-btn.prev{text-align:left}
 .pager-btn.next{text-align:right}
-.pager-dir{font-size:12px;letter-spacing:.2em;color:var(--ink-soft)}
-.pager-name{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pager-dir{font-size:13px;letter-spacing:.2em;color:var(--accent-read);font-weight:600}
+.pager-name{font-size:16px;line-height:1.5;color:var(--ink);overflow-wrap:anywhere;white-space:normal}   /* 章名完整顯示，過長時換行 */
+.pager-btn:disabled .pager-dir{color:var(--ink-soft)}
 
 @media (max-width:600px){
   .nav-inner{padding-left:12px;padding-right:12px;gap:6px}
@@ -718,15 +746,17 @@ button{font:inherit;color:inherit}
       </article>
       <nav class="pager" aria-label="章節切換">
         <button type="button" class="pager-btn prev" id="prevBtn">
-          <span class="pager-dir">← 上一章</span><span class="pager-name" id="prevName">—</span>
+          <span class="pager-dir" id="prevDir">← 上一章</span><span class="pager-name" id="prevName">—</span>
         </button>
         <button type="button" class="pager-btn next" id="nextBtn">
-          <span class="pager-dir">下一章 →</span><span class="pager-name" id="nextName">—</span>
+          <span class="pager-dir" id="nextDir">下一章 →</span><span class="pager-name" id="nextName">—</span>
         </button>
       </nav>
     </div>
   </main>
 </div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <div class="lightbox" id="lightbox" hidden role="dialog" aria-label="圖片檢視">
   <img alt="">
@@ -742,7 +772,7 @@ button{font:inherit;color:inherit}
   /* ================= 常數與工具 ================= */
   const FS_MIN = 15, FS_MAX = 30, FS_DEFAULT = 19;
   const SPINE_COLORS = ['gold', 'emerald', 'sapphire', 'crimson'];
-  const KEY = { fs: 'reader.fontSize', theme: 'reader.theme', progress: 'reader.progress' };
+  const KEY = { fs: 'reader.fontSize', theme: 'reader.theme', progress: 'reader.progress', pos: 'reader.position' };
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
@@ -774,7 +804,7 @@ button{font:inherit;color:inherit}
     fsDec: $('#fsDec'), fsInc: $('#fsInc'), fsValue: $('#fsValue'), themeBtn: $('#themeBtn'),
     progressBar: $('#progressBar'),
     chapterWrap: $('#chapterWrap'), chapterKicker: $('#chapterKicker'), chapterTitle: $('#chapterTitle'), prose: $('#prose'),
-    prevBtn: $('#prevBtn'), nextBtn: $('#nextBtn'), prevName: $('#prevName'), nextName: $('#nextName')
+    prevBtn: $('#prevBtn'), nextBtn: $('#nextBtn'), prevName: $('#prevName'), nextName: $('#nextName'), prevDir: $('#prevDir'), nextDir: $('#nextDir')
   };
 
   /* ================= 狀態 ================= */
@@ -1403,6 +1433,7 @@ ${rings}${dots}
     if (cur === next) return;
     const token = ++viewToken;
     state.view = name;
+    state.posReady = false;   // 切換期間不記錄閱讀位置
 
     const reveal = () => {
       if (token !== viewToken) return;
@@ -1410,6 +1441,7 @@ ${rings}${dots}
       el.body.dataset.view = name;
       next.hidden = false;
       window.scrollTo(0, 0);
+      if (name === 'reader') { applyPendingRestore(); state.posReady = true; }
       requestAnimationFrame(() => requestAnimationFrame(() => { if (token === viewToken) next.classList.add('active'); }));
       if (name === 'shelf') { document.title = shelfTitle(); updateHint(); fx.start(); } else fx.stop();
     };
@@ -1483,7 +1515,7 @@ ${rings}${dots}
   function progressText(book) {
     if (book._soon) return { text: '即將推出', soon: true };
     const p = getProgress(book.id);
-    return { text: p > 0 ? `已讀至第 ${p + 1} 章` : '尚未開始閱讀', soon: false };
+    return { text: hasProgress(book) ? `已讀至第 ${p + 1} 章` : '尚未開始閱讀', soon: false };
   }
 
   function bookCard(book, i) {
@@ -1557,12 +1589,77 @@ ${rings}${dots}
     p[state.book.id] = state.chapterIndex;
     store.set(KEY.progress, p);
   }
+
+  /* ---- 章內閱讀位置 ----
+     記錄「第幾章、第幾個段落、段落內走到多少比例」，而不是像素；
+     所以換字級、換手機或視窗寬度改變後，仍能回到同一句話附近。 */
+  function getPos(id) {
+    const v = store.get(KEY.pos, {})[id];
+    return v && Number.isInteger(v.i) && v.i >= 0 && Number.isInteger(v.p) ? v : null;
+  }
+  function setPos(id, pos) {
+    const all = store.get(KEY.pos, {});
+    all[id] = pos;
+    store.set(KEY.pos, all);
+  }
+  function hasProgress(book) {
+    if (getProgress(book.id) > 0) return true;
+    const pos = getPos(book.id);
+    return !!(pos && (pos.p > 0 || pos.o > 0.02));
+  }
+  const readLine = () => document.querySelector('.reader-nav').offsetHeight + 8;   // 視線：固定導覽列下方
+  const docTop = node => { let y = 0; for (let n = node; n; n = n.offsetParent) y += n.offsetTop; return y; };
+
+  function currentAnchor() {
+    if (window.scrollY < 24) return { p: 0, o: 0 };
+    const line = readLine(), kids = el.prose.children;
+    for (let i = 0; i < kids.length; i++) {
+      const r = kids[i].getBoundingClientRect();
+      if (r.bottom > line) return { p: i, o: clamp((line - r.top) / Math.max(1, r.height), 0, 1) };
+    }
+    return { p: Math.max(0, kids.length - 1), o: 1 };
+  }
+  function scrollToAnchor(a) {
+    const kids = el.prose.children;
+    const target = kids[Math.min(a.p, kids.length - 1)];
+    if (!target) return;
+    window.scrollTo(0, Math.max(0, Math.round(docTop(target) + a.o * target.offsetHeight - readLine())));
+  }
+  function savePosition() {
+    if (!state.posReady || state.view !== 'reader' || !state.book || !state.chapters.length) return;
+    const a = currentAnchor();
+    setPos(state.book.id, { i: state.chapterIndex, p: a.p, o: Number(a.o.toFixed(3)) });
+  }
+
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  // 進入閱讀器、畫面真正顯示之後才能量版面，所以由 showView 在切換完成時呼叫
+  function applyPendingRestore() {
+    const pos = state.pendingRestore;
+    state.pendingRestore = null;
+    if (!pos) return;
+    el.prose.querySelectorAll('img').forEach(im => { im.loading = 'eager'; });   // 圖片先載入，避免高度變動
+    state.userMoved = false;
+    const t0 = performance.now();
+    const again = () => { if (!state.userMoved && performance.now() - t0 < 4000) scrollToAnchor(pos); };
+    scrollToAnchor(pos);
+    el.prose.querySelectorAll('img').forEach(im => { if (!im.complete) im.addEventListener('load', again, { once: true }); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(again);   // 網頁字型載入後字高可能改變
+    if (pos.p > 0 || pos.o > 0.05) toast('已回到上次閱讀的位置');
+  }
+
   function updateReadLabel() {
     const b = state.book;
     const soon = !!(b && b._soon);
     el.readBtn.disabled = soon || state.loadingBook;
     el.readBtn.classList.toggle('is-soon', soon);
-    el.readBtn.textContent = soon ? '敬請期待' : (b && getProgress(b.id) > 0 ? '繼續閱讀' : '開始閱讀');
+    el.readBtn.textContent = soon ? '敬請期待' : (b && hasProgress(b) ? '繼續閱讀' : '開始閱讀');
   }
 
   function openBook(book, from = 'shelf') {
@@ -1621,7 +1718,7 @@ ${rings}${dots}
       state.chapters = chapters;
       const saved = getProgress(book.id);
       buildChapterMenu();
-      renderChapter(saved < chapters.length ? saved : 0);
+      renderChapter(saved < chapters.length ? saved : 0, { restore: true });
       showView('reader');
     } catch (err) {
       if (state.book === book) setCoverMsg(err.message);
@@ -1659,6 +1756,14 @@ ${rings}${dots}
   }
 
   // 選單按鈕只顯示「第X章」；目錄清單裡仍是完整章名
+  // 把「第四章　四點鐘的車隊」拆成 { short: '第四章', rest: '四點鐘的車隊' }；沒有「第X章」前綴則 short 為空
+  function splitTitle(title) {
+    const t = String(title).trim();
+    const m = t.match(/^第\s*[0-9０-９零〇一二三四五六七八九十百千兩两]+\s*[章回節节篇卷集部話话]/);
+    if (!m) return { short: '', rest: t };
+    return { short: m[0].replace(/\s+/g, ''), rest: t.slice(m[0].length).replace(/^[\s　:：－—\-·]+/, '') };
+  }
+
   function chapterShort(title, index) {
     const t = String(title).trim();
     const m = t.match(/^第\s*[0-9０-９零〇一二三四五六七八九十百千兩两]+\s*[章回節节篇卷集部話话]/);
@@ -1667,7 +1772,7 @@ ${rings}${dots}
     return first && [...first].length <= 8 ? first : `第 ${index + 1} 章`;
   }
 
-  function renderChapter(index) {
+  function renderChapter(index, { restore = false } = {}) {
     const ch = state.chapters[index];
     if (!ch) return;
     state.chapterIndex = index;
@@ -1683,14 +1788,28 @@ ${rings}${dots}
     el.chapterWrap.classList.add('is-in');
 
     const prev = state.chapters[index - 1], next = state.chapters[index + 1];
-    el.prevBtn.disabled = !prev; el.prevName.textContent = prev ? prev.title : '—';
-    el.nextBtn.disabled = !next; el.nextName.textContent = next ? next.title : '—';
+    // 上下章按鈕：第一行「← 第四章」，第二行完整章名；章名沒有「第X章」前綴時，第一行用「上一章／下一章」
+    const fill = (btn, dirEl, nameEl, ch, i, arrow, fallback) => {
+      btn.disabled = !ch;
+      if (!ch) { dirEl.textContent = arrow(fallback); nameEl.textContent = '—'; return; }
+      const { short, rest } = splitTitle(ch.title);
+      dirEl.textContent = arrow(short || fallback);
+      nameEl.textContent = short ? rest : ch.title;
+      nameEl.hidden = !nameEl.textContent;
+    };
+    fill(el.prevBtn, el.prevDir, el.prevName, prev, index - 1, s => `← ${s}`, '上一章');
+    fill(el.nextBtn, el.nextDir, el.nextName, next, index + 1, s => `${s} →`, '下一章');
 
     markActiveChapter();
     document.title = `${ch.title} - ${state.book.title}`;
     window.scrollTo(0, 0);
     updateProgressBar();
     saveProgress();
+
+    // 從封面「繼續閱讀」進來時，回到上次在這一章讀到的位置；換章則從該章開頭
+    const pos = getPos(state.book.id);
+    state.pendingRestore = restore && pos && pos.i === index && (pos.p > 0 || pos.o > 0) ? pos : null;
+    if (!state.pendingRestore) setPos(state.book.id, { i: index, p: 0, o: 0 });
   }
 
   function goChapter(index) {
@@ -1713,8 +1832,10 @@ ${rings}${dots}
 
   /* ---- 字型大小 ---- */
   function setFontSize(n, persist = true) {
+    const keep = state.posReady && state.view === 'reader' ? currentAnchor() : null;   // 調整字級後留在原本讀的那句
     state.fontSize = clamp(Math.round(Number(n) || FS_DEFAULT), FS_MIN, FS_MAX);
     el.root.style.setProperty('--fs', state.fontSize + 'px');
+    if (keep) scrollToAnchor(keep);
     el.fsValue.textContent = state.fontSize;
     el.fsDec.disabled = state.fontSize <= FS_MIN;
     el.fsInc.disabled = state.fontSize >= FS_MAX;
@@ -1740,7 +1861,10 @@ ${rings}${dots}
     const max = h.scrollHeight - h.clientHeight;
     el.progressBar.style.transform = `scaleX(${max > 0 ? clamp(h.scrollTop / max, 0, 1) : 0})`;
   }
+  let posTimer = 0;
   function onScroll() {
+    clearTimeout(posTimer);
+    posTimer = setTimeout(savePosition, 350);   // 停止捲動 0.35 秒後記錄位置
     if (ticking) return;
     ticking = true;
     requestAnimationFrame(() => { ticking = false; updateProgressBar(); });
@@ -1757,7 +1881,11 @@ ${rings}${dots}
     el.coverImg.addEventListener('load', () => el.coverImg.classList.add('loaded'));
     el.coverImg.addEventListener('error', () => { el.coverImage.hidden = true; }); // 找不到圖片就整塊隱藏，不顯示破圖
     el.readBtn.addEventListener('click', startReading);
-    el.homeBtn.addEventListener('click', () => { closeMenu(); showView('shelf'); });
+    el.homeBtn.addEventListener('click', () => { closeMenu(); savePosition(); showView('shelf'); });
+    // 手機切到別的 App 或關閉分頁前，立刻記下位置；使用者自己動手捲動後，就不再自動校正位置
+    document.addEventListener('visibilitychange', () => { if (document.hidden) savePosition(); });
+    window.addEventListener('pagehide', savePosition);
+    ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(ev => window.addEventListener(ev, () => { state.userMoved = true; }, { passive: true }));
 
     el.chapterToggle.addEventListener('click', toggleMenu);
     el.chapterList.addEventListener('click', e => {
