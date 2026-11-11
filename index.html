@@ -1093,25 +1093,57 @@ ${rings}${dots}
     return list;
   }
 
+  // 把章節檔文字拆成章名（<h1>）與內文
+  function applyChapterText(ch, text) {
+    const tpl = document.createElement('template');
+    tpl.innerHTML = text;
+    const h1 = tpl.content.querySelector('h1');             // 閱讀器自己會顯示章名，所以從內文拿掉
+    if (h1) {
+      const t = h1.textContent.trim();
+      if (t && ch._auto) { ch.title = t; ch._auto = false; ch._titleChanged = true; }
+      h1.remove();
+    }
+    ch.html = tpl.innerHTML;
+    ch.loaded = true;
+    return ch;
+  }
+
+  // 資料夾模式：book.file 以 / 結尾（例如 "books/book1/"），自動找 001.html、002.html … 直到找不到為止，不需要目錄檔
+  async function discoverChapters(dirUrl, label) {
+    const list = [];
+    const BATCH = 8;
+    for (let start = 1; ; start += BATCH) {
+      const nums = Array.from({ length: BATCH }, (_, k) => start + k);
+      const res = await Promise.all(nums.map(async n => {
+        const url = new URL(String(n).padStart(3, '0') + '.html', dirUrl).href;
+        try {
+          const r = await fetch(url, { cache: 'no-cache' });
+          return r.ok ? { n, url, text: await r.text() } : null;
+        } catch { return start === 1 && n === 1 ? 'err' : null; }
+      }));
+      if (res[0] === 'err') throw new Error(location.protocol === 'file:'
+        ? `無法讀取 ${label}：請用本機伺服器開啟，或上傳到網站空間（GitHub Pages）後再開啟。`
+        : `無法讀取 ${label}，請檢查網路連線。`);
+      let ended = false;
+      for (const r of res) {
+        if (!r) { ended = true; break; }
+        const ch = { title: `第 ${r.n} 章`, _auto: true, url: r.url, html: '', loaded: false };
+        applyChapterText(ch, r.text);
+        list.push(ch);
+      }
+      if (ended || start > 2000) break;
+    }
+    if (!list.length) throw new Error(`${label} 找不到 001.html，請確認章節檔放在「${dirUrl.replace(location.origin, '')}」，且檔名是 001.html、002.html…`);
+    return list;
+  }
+
   // 取得某一章的內文；一章一檔的書在這裡才真正下載（同一章只下載一次）
   function ensureChapter(index) {
     const ch = state.chapters[index];
     if (!ch) return Promise.reject(new Error('找不到這個章節。'));
     if (ch.loaded) return Promise.resolve(ch);
     if (!ch._p) {
-      ch._p = fetchText(ch.url, `第 ${index + 1} 章「${ch.title}」`).then(text => {
-        const tpl = document.createElement('template');
-        tpl.innerHTML = text;
-        const h1 = tpl.content.querySelector('h1');           // 章名在 <h1>，閱讀器自己會顯示章名，所以從內文拿掉
-        if (h1) {
-          const t = h1.textContent.trim();
-          if (ch._auto && t) { ch.title = t; ch._auto = false; ch._titleChanged = true; }
-          h1.remove();
-        }
-        ch.html = tpl.innerHTML;
-        ch.loaded = true;
-        return ch;
-      });
+      ch._p = fetchText(ch.url, `第 ${index + 1} 章「${ch.title}」`).then(text => applyChapterText(ch, text));
       ch._p.catch(() => { ch._p = null; });                    // 失敗時允許重試
     }
     return ch._p;
@@ -1128,7 +1160,9 @@ ${rings}${dots}
   function loadBook(book) {
     if (!bookCache.has(book.id)) {
       const baseUrl = new URL(book.file, document.baseURI).href;
-      const p = fetchJson(book.file, `《${book.title}》內容檔`).then(d => normalizeChapters(d, baseUrl));
+      const p = book.file.endsWith('/')
+        ? discoverChapters(baseUrl, `《${book.title}》的章節檔`)
+        : fetchJson(book.file, `《${book.title}》內容檔`).then(d => normalizeChapters(d, baseUrl));
       p.catch(() => bookCache.delete(book.id)); // 失敗時允許重試
       bookCache.set(book.id, p);
     }
