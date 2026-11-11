@@ -326,6 +326,7 @@ button{font:inherit;color:inherit}
   font-size:calc(var(--fs) + 10px);
 }
 .chapter.is-in{animation:chapterIn .6s var(--ease) both}
+.chapter.is-in.is-loading{animation:none;opacity:.4;transition:opacity .25s ease}
 @keyframes chapterIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
 .prose{font-family:var(--font-serif);color:var(--ink)}
@@ -1000,7 +1001,7 @@ ${rings}${dots}
   }
 
   /* ================= 資料讀取 ================= */
-  async function fetchJson(url, label) {
+  async function fetchRaw(url, label) {
     let res;
     try {
       res = await fetch(url, { cache: 'no-cache' });
@@ -1010,8 +1011,15 @@ ${rings}${dots}
         : `無法讀取 ${label}，請檢查網路連線與檔案路徑（${url}）。`);
     }
     if (!res.ok) throw new Error(`${label} 讀取失敗（HTTP ${res.status}，路徑：${url}）`);
+    return res;
+  }
+  async function fetchJson(url, label) {
+    const res = await fetchRaw(url, label);
     try { return await res.json(); }
     catch { throw new Error(`${label} 不是有效的 JSON，請檢查逗號與引號是否正確（路徑：${url}）。`); }
+  }
+  async function fetchText(url, label) {
+    return (await fetchRaw(url, label)).text();
   }
 
   async function loadConfig() {
@@ -1059,21 +1067,68 @@ ${rings}${dots}
     return { site: cfg.site || {}, books, series, items };
   }
 
-  function normalizeChapters(data) {
+  /* 書籍檔 book.file 支援兩種格式（同一個 config.json 裡可以混用）：
+     ① 整本在一個檔案：{ "chapters": { "章名": "<p>…</p>", … } }                      → 一次載入
+     ② 一章一個檔案：  { "chapters": [ { "title": "章名", "file": "001.html" }, … ] }  → 目錄先載入，內文讀到才載入
+        file 路徑相對於這個目錄檔本身；章節檔是 HTML 片段，第一行 <h1> 為章名。 */
+  function normalizeChapters(data, baseUrl) {
     const src = data && typeof data === 'object' && data.chapters ? data.chapters : data;
     let list = [];
     if (Array.isArray(src)) {
-      list = src.map((c, i) => ({ title: String(c && c.title != null ? c.title : `第 ${i + 1} 章`), html: String(c && (c.content ?? c.html) != null ? (c.content ?? c.html) : '') }));
+      list = src.map((c, i) => {
+        const file = c && typeof c.file === 'string' ? c.file.trim() : '';
+        const hasTitle = c && c.title != null && String(c.title).trim() !== '';
+        return {
+          title: hasTitle ? String(c.title) : `第 ${i + 1} 章`,
+          _auto: !hasTitle,                                   // 目錄沒寫章名：載入該章後改用檔案內的 <h1>
+          url: file ? new URL(file, baseUrl).href : '',
+          html: file ? '' : String(c && (c.content ?? c.html) != null ? (c.content ?? c.html) : ''),
+          loaded: !file
+        };
+      });
     } else if (src && typeof src === 'object') {
-      list = Object.entries(src).map(([title, html]) => ({ title, html: String(html ?? '') }));
+      list = Object.entries(src).map(([title, html]) => ({ title, html: String(html ?? ''), url: '', loaded: true }));
     }
-    if (!list.length) throw new Error('小說檔案中找不到任何章節（需要 "chapters" 物件，key 為章節名、value 為內文）。');
+    if (!list.length) throw new Error('小說檔案中找不到任何章節（需要 "chapters" 物件或陣列）。');
     return list;
+  }
+
+  // 取得某一章的內文；一章一檔的書在這裡才真正下載（同一章只下載一次）
+  function ensureChapter(index) {
+    const ch = state.chapters[index];
+    if (!ch) return Promise.reject(new Error('找不到這個章節。'));
+    if (ch.loaded) return Promise.resolve(ch);
+    if (!ch._p) {
+      ch._p = fetchText(ch.url, `第 ${index + 1} 章「${ch.title}」`).then(text => {
+        const tpl = document.createElement('template');
+        tpl.innerHTML = text;
+        const h1 = tpl.content.querySelector('h1');           // 章名在 <h1>，閱讀器自己會顯示章名，所以從內文拿掉
+        if (h1) {
+          const t = h1.textContent.trim();
+          if (ch._auto && t) { ch.title = t; ch._auto = false; ch._titleChanged = true; }
+          h1.remove();
+        }
+        ch.html = tpl.innerHTML;
+        ch.loaded = true;
+        return ch;
+      });
+      ch._p.catch(() => { ch._p = null; });                    // 失敗時允許重試
+    }
+    return ch._p;
+  }
+
+  // 在閒置時先載入下一章，翻頁時就不用等
+  function prefetchChapter(index) {
+    const ch = state.chapters[index];
+    if (!ch || ch.loaded) return;
+    const run = () => { ensureChapter(index).catch(() => {}); };
+    if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 3000 }); else setTimeout(run, 800);
   }
 
   function loadBook(book) {
     if (!bookCache.has(book.id)) {
-      const p = fetchJson(book.file, `《${book.title}》內容檔`).then(normalizeChapters);
+      const baseUrl = new URL(book.file, document.baseURI).href;
+      const p = fetchJson(book.file, `《${book.title}》內容檔`).then(d => normalizeChapters(d, baseUrl));
       p.catch(() => bookCache.delete(book.id)); // 失敗時允許重試
       bookCache.set(book.id, p);
     }
@@ -1717,8 +1772,11 @@ ${rings}${dots}
       if (state.book !== book) return; // 讀取途中使用者已離開
       state.chapters = chapters;
       const saved = getProgress(book.id);
+      const start = saved < chapters.length ? saved : 0;
+      await ensureChapter(start);                 // 一章一檔時，先把要讀的那一章載入，才切換畫面
+      if (state.book !== book) return;
       buildChapterMenu();
-      renderChapter(saved < chapters.length ? saved : 0, { restore: true });
+      renderChapter(start, { restore: true });
       showView('reader');
     } catch (err) {
       if (state.book === book) setCoverMsg(err.message);
@@ -1819,11 +1877,24 @@ ${rings}${dots}
     const pos = getPos(state.book.id);
     state.pendingRestore = restore && pos && pos.i === index && (pos.p > 0 || pos.o > 0) ? pos : null;
     if (!state.pendingRestore) setPos(state.book.id, { i: index, p: 0, o: 0 });
+
+    prefetchChapter(index + 1);
   }
 
-  function goChapter(index) {
+  let chapterToken = 0;
+  async function goChapter(index) {
     if (index < 0 || index >= state.chapters.length) return;
+    const token = ++chapterToken;
+    const ch = state.chapters[index];
+    if (!ch.loaded) {
+      const timer = setTimeout(() => el.chapterWrap.classList.add('is-loading'), 150);   // 載入超過 0.15 秒才顯示變淡
+      try { await ensureChapter(index); }
+      catch (err) { toast('這一章載入失敗，請稍後再試'); console.warn(err.message); return; }
+      finally { clearTimeout(timer); el.chapterWrap.classList.remove('is-loading'); }
+      if (token !== chapterToken) return;         // 載入途中使用者又點了別章
+    }
     renderChapter(index);
+    if (ch._titleChanged) { buildChapterMenu(); markActiveChapter(); }
   }
 
   /* ---- 章節下拉選單 ---- */
